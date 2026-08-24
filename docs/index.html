@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#0e1116">
+<title>Transkript</title>
+<link rel="stylesheet" href="stil.css">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><text y='26' font-size='26'>&#128221;</text></svg>">
+</head>
+<body>
+
+<header class="kopf">
+  <h1>Transkript</h1>
+  <label class="schalter" title="Fachbegriffe rund um Wettboersen und Quotenrechnung">
+    <input type="checkbox" id="orionSchalter" checked>
+    <span class="schieber"></span>
+    <span class="schalterText">Orion-Funktion</span>
+  </label>
+</header>
+
+<div id="warnung" class="warnung" hidden></div>
+
+<nav class="reiter">
+  <button class="reiterKnopf aktiv" data-ziel="tafelAufnahme">Aufnahme</button>
+  <button class="reiterKnopf" data-ziel="tafelOrion">Orion</button>
+  <button class="reiterKnopf" data-ziel="tafelInfo">Info</button>
+</nav>
+
+<main>
+
+  <!-- ============ AUFNAHME ============ -->
+  <section id="tafelAufnahme" class="tafel aktiv">
+    <div class="karte">
+      <label class="feld">
+        <span>Titel</span>
+        <input type="text" id="titel" placeholder="z.B. Besprechung Montag">
+      </label>
+
+      <div class="standZeile">
+        <span class="punkt" id="punkt"></span>
+        <span id="uhr">00:00</span>
+        <span class="standText" id="standText">Bereit.</span>
+      </div>
+
+      <div class="knopfReihe">
+        <button id="knopfStart" class="knopf haupt">Aufnahme starten</button>
+        <button id="knopfPause" class="knopf" disabled>Pause</button>
+        <button id="knopfStopp" class="knopf gefahr" disabled>Stoppen</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ ORION ============ -->
+  <section id="tafelOrion" class="tafel">
+    <div class="karte">
+      <p class="hinweis">
+        Die Orion-Funktion zieht Fachbegriffe gerade, die die Spracherkennung
+        verhoert hat. Aus &bdquo;Polimarket&ldquo; wird &bdquo;Polymarket&ldquo;,
+        aus &bdquo;schure bet&ldquo; wird &bdquo;Surebet&ldquo;. Ist sie aus,
+        bleibt der Text genau so, wie er erkannt wurde.
+      </p>
+      <p class="zahlenZeile">
+        <span id="zahlBegriffe">0</span> Begriffe &nbsp;&middot;&nbsp;
+        <span id="zahlKorrekturen">0</span> Korrekturregeln
+      </p>
+
+      <label class="feld">
+        <span>Fachbegriffe (eine Zeile = ein Begriff)</span>
+        <textarea id="feldBegriffe" rows="10" spellcheck="false"></textarea>
+      </label>
+
+      <label class="feld">
+        <span>Korrekturen (falsch gehoert = richtig)</span>
+        <textarea id="feldKorrekturen" rows="8" spellcheck="false"></textarea>
+      </label>
+
+      <div class="knopfReihe">
+        <button id="knopfBegriffeSpeichern" class="knopf haupt">Speichern</button>
+        <button id="knopfBegriffeZurueck" class="knopf still">Auf Standard zuruecksetzen</button>
+      </div>
+      <p class="hinweis klein">
+        Deine Aenderungen bleiben in diesem Browser gespeichert.
+      </p>
+    </div>
+  </section>
+
+  <!-- ============ INFO ============ -->
+  <section id="tafelInfo" class="tafel">
+    <div class="karte">
+      <h2>Was diese Seite kann</h2>
+      <p class="hinweis">
+        Mitschreiben, was du sprichst, und das Ergebnis als PDF, Word-Datei
+        oder Text herunterladen. Ohne Installation, auch am Handy.
+      </p>
+
+      <h2>Was du wissen solltest</h2>
+      <ul class="liste">
+        <li><strong>Die Spracherkennung kommt vom Browser.</strong> Chrome und
+            Edge schicken den Ton dafuer an Google. Fuer Vertrauliches nimm die
+            Laptop-Fassung, die rechnet offline.</li>
+        <li><strong>Das Fenster muss offen und sichtbar bleiben.</strong>
+            Legst du das Handy weg oder wechselst den Reiter, pausiert der
+            Browser die Erkennung.</li>
+        <li><strong>Audiodateien</strong> kann diese Seite nicht verarbeiten.
+            Dafuer gibt es die Laptop-Fassung.</li>
+        <li><strong>Es braucht Internet</strong> und ein Mikrofon, dem du den
+            Zugriff erlaubst.</li>
+      </ul>
+
+      <h2>Die Fassung fuer den Laptop</h2>
+      <p class="hinweis">
+        Laeuft komplett offline, nimmt auch im Hintergrund auf, verarbeitet
+        Audiodateien jeder Laenge und kann den PC-Ton mitschneiden.
+      </p>
+      <p>
+        <a class="knopf" href="https://github.com/Harryclaude-hub/transkript"
+           target="_blank" rel="noopener">Zum Programm auf GitHub</a>
+      </p>
+    </div>
+  </section>
+
+  <!-- ============ TRANSKRIPT ============ -->
+  <section class="karte transkriptKarte">
+    <div class="transkriptKopf">
+      <h2>Transkript</h2>
+      <span class="zahlenZeile" id="transkriptZahlen">noch leer</span>
+    </div>
+
+    <div id="transkript" class="transkript">
+      <p class="leer">Noch nichts aufgenommen.
+         Druecke oben auf &bdquo;Aufnahme starten&ldquo;.</p>
+    </div>
+
+    <p class="vorlaeufig" id="vorlaeufig"></p>
+
+    <div class="knopfReihe">
+      <button class="knopf haupt" data-format="pdf">Als PDF</button>
+      <button class="knopf" data-format="doc">Als Word</button>
+      <button class="knopf" data-format="txt">Als Text</button>
+      <button class="knopf still" id="knopfKopieren">Kopieren</button>
+      <button class="knopf still" id="knopfLeeren">Leeren</button>
+    </div>
+  </section>
+
+</main>
+
+<div id="meldung" class="meldung"></div>
+
+<script src="begriffe.js"></script>
+<script src="orion.js"></script>
+<script src="pdf.js"></script>
+<script src="logik.js"></script>
+</body>
+</html>

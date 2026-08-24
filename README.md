@@ -13,7 +13,31 @@ laufenden Kosten. Kein Ton verlässt den Laptop.
 
 ---
 
-## Was es kann
+## Zwei Fassungen
+
+**Ohne Installation, direkt im Browser:**
+### → [harryclaude-hub.github.io/transkript](https://harryclaude-hub.github.io/transkript/)
+
+Aufnahme starten, mitschreiben lassen, als PDF, Word oder Text herunterladen.
+Läuft auch am Handy. Die Spracherkennung kommt dabei vom Browser, Chrome und
+Edge schicken den Ton dafür an Google.
+
+**Für den Laptop**, weiter unten beschrieben: rechnet offline, nimmt im
+Hintergrund auf, verarbeitet Audiodateien jeder Länge und kann den PC-Ton
+mitschneiden.
+
+| | Im Browser | Am Laptop |
+|---|---|---|
+| Installation | keine | einmalig, 5 bis 15 min |
+| Erkennung läuft | bei Google | auf deinem Rechner |
+| Audiodateien | nein | ja, beliebig lang |
+| Im Hintergrund | nein, Fenster muss offen bleiben | ja |
+| PC-Ton mitschneiden | nein | ja |
+| Orion-Funktion | Korrektur danach | Vorspann **und** Korrektur |
+
+---
+
+## Was die Laptop-Fassung kann
 
 | | |
 |---|---|

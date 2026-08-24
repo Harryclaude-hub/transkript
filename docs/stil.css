@@ -1,0 +1,251 @@
+/* ==================================================================
+   Transkript im Browser - reine DESIGN-SCHICHT.
+
+   Diese Datei darf komplett geloescht werden. Dann sieht die Seite nackt
+   aus, funktioniert aber zu hundert Prozent weiter. Hier steht kein
+   einziger Rechenweg und keine Ablaufsteuerung, nur Aussehen.
+   ================================================================== */
+
+:root {
+  --grund:        #0e1116;
+  --karte:        #161b22;
+  --karte-rand:   #232a35;
+  --schrift:      #e6edf3;
+  --schrift-leise:#8b949e;
+  --akzent:       #3b82f6;
+  --akzent-hell:  #60a5fa;
+  --orion:        #f59e0b;
+  --gut:          #22c55e;
+  --gefahr:       #ef4444;
+  --rundung:      12px;
+  --schatten:     0 2px 14px rgba(0,0,0,.35);
+}
+
+* { box-sizing: border-box; }
+
+body {
+  margin: 0 auto;
+  padding: 0 16px 40px;
+  background: var(--grund);
+  color: var(--schrift);
+  font-family: "Segoe UI", system-ui, -apple-system, sans-serif;
+  font-size: 15px;
+  line-height: 1.55;
+  max-width: 1000px;
+  -webkit-text-size-adjust: 100%;
+}
+
+h1 { font-size: 21px; margin: 0; letter-spacing: -.3px; }
+h2 { font-size: 15px; margin: 18px 0 10px; color: var(--schrift-leise);
+     text-transform: uppercase; letter-spacing: .8px; font-weight: 600; }
+h2:first-child { margin-top: 0; }
+
+a { color: var(--akzent-hell); }
+
+/* ------------------------------ Kopf ------------------------------ */
+
+.kopf {
+  display: flex; align-items: center; justify-content: space-between;
+  gap: 16px; padding: 20px 0 16px; flex-wrap: wrap;
+}
+
+.schalter {
+  display: inline-flex; align-items: center; gap: 10px;
+  cursor: pointer; user-select: none;
+  background: var(--karte); border: 1px solid var(--karte-rand);
+  padding: 7px 14px 7px 10px; border-radius: 999px;
+  transition: border-color .18s;
+}
+.schalter:hover { border-color: var(--orion); }
+.schalter input { display: none; }
+
+.schieber {
+  width: 38px; height: 21px; border-radius: 999px;
+  background: #30363d; position: relative; flex: none;
+  transition: background .2s;
+}
+.schieber::after {
+  content: ""; position: absolute; top: 3px; left: 3px;
+  width: 15px; height: 15px; border-radius: 50%;
+  background: #8b949e; transition: transform .2s, background .2s;
+}
+.schalter input:checked + .schieber { background: rgba(245,158,11,.35); }
+.schalter input:checked + .schieber::after {
+  transform: translateX(17px); background: var(--orion);
+}
+.schalterText { font-size: 13.5px; font-weight: 600; color: var(--schrift-leise); }
+.schalter input:checked ~ .schalterText { color: var(--orion); }
+
+/* ------------------------------ Warnung ------------------------------ */
+
+.warnung {
+  background: rgba(245,158,11,.1); border: 1px solid rgba(245,158,11,.35);
+  border-radius: var(--rundung); padding: 12px 16px; margin-bottom: 14px;
+  font-size: 13.5px; color: #fcd34d;
+}
+
+/* ------------------------------ Reiter ------------------------------ */
+
+.reiter {
+  display: flex; gap: 4px; margin-bottom: 16px;
+  background: var(--karte); padding: 4px;
+  border: 1px solid var(--karte-rand); border-radius: var(--rundung);
+  overflow-x: auto;
+}
+.reiterKnopf {
+  flex: 1; min-width: 80px; padding: 9px 12px;
+  background: transparent; border: 0; border-radius: 8px;
+  color: var(--schrift-leise); font: inherit; font-weight: 600;
+  font-size: 14px; cursor: pointer; transition: background .15s, color .15s;
+}
+.reiterKnopf:hover { color: var(--schrift); }
+.reiterKnopf.aktiv { background: var(--akzent); color: #fff; }
+
+.tafel { display: none; }
+.tafel.aktiv { display: block; }
+
+/* ------------------------------ Karten ------------------------------ */
+
+.karte {
+  background: var(--karte); border: 1px solid var(--karte-rand);
+  border-radius: var(--rundung); padding: 18px; margin-bottom: 16px;
+  box-shadow: var(--schatten);
+}
+
+.feld { display: block; margin-bottom: 14px; }
+.feld > span {
+  display: block; font-size: 12.5px; font-weight: 600;
+  color: var(--schrift-leise); margin-bottom: 6px;
+}
+
+input[type=text], textarea {
+  width: 100%; padding: 10px 12px;
+  background: #0d1117; color: var(--schrift);
+  border: 1px solid var(--karte-rand); border-radius: 9px;
+  font: inherit; font-size: 14.5px; transition: border-color .15s;
+}
+textarea { font-family: "Consolas", ui-monospace, monospace; font-size: 13px;
+           line-height: 1.6; resize: vertical; }
+input:focus, textarea:focus { outline: none; border-color: var(--akzent); }
+
+.hinweis { font-size: 13.5px; color: var(--schrift-leise); margin: 0 0 12px; }
+.hinweis.klein { font-size: 12.5px; margin-top: 10px; margin-bottom: 0; }
+.zahlenZeile { font-size: 12.5px; color: var(--schrift-leise); }
+
+.liste { margin: 0 0 12px; padding-left: 20px; font-size: 13.5px;
+         color: var(--schrift-leise); }
+.liste li { margin-bottom: 7px; }
+.liste strong { color: var(--schrift); font-weight: 600; }
+
+/* ------------------------------ Knoepfe ------------------------------ */
+
+.knopfReihe { display: flex; gap: 9px; flex-wrap: wrap; margin-top: 4px; }
+
+.knopf {
+  display: inline-block; text-decoration: none; text-align: center;
+  padding: 10px 18px; border-radius: 9px; cursor: pointer;
+  background: #21262d; color: var(--schrift);
+  border: 1px solid var(--karte-rand);
+  font: inherit; font-size: 14px; font-weight: 600;
+  transition: background .15s, transform .08s, opacity .15s;
+}
+.knopf:hover:not(:disabled) { background: #2d333b; }
+.knopf:active:not(:disabled) { transform: translateY(1px); }
+.knopf:disabled { opacity: .38; cursor: not-allowed; }
+
+.knopf.haupt { background: var(--akzent); border-color: var(--akzent); color: #fff; }
+.knopf.haupt:hover:not(:disabled) { background: var(--akzent-hell); }
+.knopf.gefahr { background: transparent; border-color: var(--gefahr); color: #fca5a5; }
+.knopf.gefahr:hover:not(:disabled) { background: rgba(239,68,68,.14); }
+.knopf.still { background: transparent; color: var(--schrift-leise); }
+.knopf.still:hover { color: var(--schrift); }
+
+/* ------------------------------ Aufnahmestand ------------------------------ */
+
+.standZeile {
+  display: flex; align-items: center; gap: 11px;
+  margin: 4px 0 16px; font-size: 13.5px;
+}
+.punkt {
+  width: 10px; height: 10px; border-radius: 50%; flex: none;
+  background: #30363d; transition: background .2s;
+}
+body.nimmtAuf .punkt {
+  background: var(--gefahr);
+  animation: pulsen 1.5s ease-in-out infinite;
+}
+@keyframes pulsen {
+  0%, 100% { opacity: 1;  box-shadow: 0 0 0 0 rgba(239,68,68,.5); }
+  50%      { opacity: .55; box-shadow: 0 0 0 7px rgba(239,68,68,0); }
+}
+#uhr {
+  font-variant-numeric: tabular-nums; font-weight: 600; font-size: 16px;
+  min-width: 54px;
+}
+.standText { color: var(--schrift-leise); }
+
+/* ------------------------------ Transkript ------------------------------ */
+
+.transkriptKarte { border-color: #2b3441; }
+
+.transkriptKopf {
+  display: flex; align-items: baseline; justify-content: space-between;
+  gap: 12px; margin-bottom: 12px; flex-wrap: wrap;
+}
+.transkriptKopf h2 { margin: 0; }
+
+.transkript {
+  max-height: 44vh; overflow-y: auto; padding: 4px 4px 4px 0;
+  margin-bottom: 8px; scroll-behavior: smooth;
+}
+.transkript::-webkit-scrollbar { width: 9px; }
+.transkript::-webkit-scrollbar-thumb { background: #2d333b; border-radius: 999px; }
+
+.absatz { display: flex; gap: 14px; margin-bottom: 14px; }
+.absatzZeit {
+  flex: none; width: 44px; font-size: 11.5px; font-variant-numeric: tabular-nums;
+  color: #55606d; padding-top: 4px; text-align: right; user-select: none;
+}
+.absatz p { margin: 0; }
+
+.vorlaeufig {
+  min-height: 20px; margin: 0 0 14px; font-size: 14.5px;
+  color: #6b7684; font-style: italic;
+}
+
+.leer { color: var(--schrift-leise); font-size: 14px; text-align: center;
+        padding: 22px 10px; margin: 0; }
+
+/* ------------------------------ Meldung ------------------------------ */
+
+.meldung {
+  position: fixed; left: 50%; bottom: 22px;
+  transform: translate(-50%, 130%);
+  background: #21262d; color: var(--schrift);
+  border: 1px solid var(--karte-rand); border-left: 3px solid var(--akzent);
+  padding: 12px 20px; border-radius: 10px; box-shadow: var(--schatten);
+  font-size: 14px; max-width: min(560px, calc(100vw - 32px));
+  opacity: 0; transition: transform .28s, opacity .28s; z-index: 50;
+}
+.meldung.sichtbar { transform: translate(-50%, 0); opacity: 1; }
+.meldung.fehler { border-left-color: var(--gefahr); }
+
+/* -------------------- Orion aus: Farbe zurueckziehen -------------------- */
+
+body.orionAus .schalterText { color: var(--schrift-leise); }
+
+/* ------------------------------ Handy ------------------------------ */
+
+@media (max-width: 620px) {
+  body { padding: 0 12px 32px; font-size: 15.5px; }
+  .kopf { padding: 16px 0 12px; }
+  .karte { padding: 15px; }
+  .knopfReihe .knopf { flex: 1 1 auto; }
+  .absatzZeit { display: none; }
+  .transkript { max-height: 38vh; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  * { transition: none !important; animation: none !important;
+      scroll-behavior: auto !important; }
+}
