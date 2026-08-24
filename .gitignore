@@ -1,0 +1,20 @@
+# --- Sprachmodelle: rund 3,4 GB, werden beim ersten Start selbst geholt ---
+modelle/
+
+# --- Private Inhalte: nichts davon gehoert ins Netz ---
+aufnahmen/
+ergebnisse/
+
+# --- Oertliche Einstellungen, jeder Rechner hat seine eigenen ---
+einstellungen.json
+
+# --- Python ---
+__pycache__/
+*.py[cod]
+*.egg-info/
+.venv/
+venv/
+
+# --- Windows ---
+Thumbs.db
+desktop.ini

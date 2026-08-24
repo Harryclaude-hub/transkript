@@ -1,0 +1,123 @@
+# Orion-Fachbegriffe
+# Eine Zeile = ein Begriff. Zeilen mit # sind Kommentare und werden ignoriert.
+# Je weiter oben ein Begriff steht, desto staerker zieht er bei der Erkennung.
+# Du kannst hier jederzeit selbst Begriffe ergaenzen oder loeschen.
+# Nach dem Speichern in der App auf "Speichern und neu laden" druecken.
+#
+# Diese Fassung deckt Sportwetten, Wettboersen und Quotenrechnung ab.
+# Fuer ein anderes Fachgebiet einfach den Inhalt austauschen, am Programm
+# muss dafuer nichts geaendert werden.
+
+# --- Plattformen und Boersen ---
+Polymarket
+Betfair
+Betfair Exchange
+Pinnacle
+Smarkets
+Matchbook
+Kalshi
+bet365
+Bwin
+Tipico
+Interwetten
+Unibet
+Bet-at-home
+Winamax
+Admiral
+
+# --- Kernbegriffe Wetten ---
+Quote
+Quoten
+Gegenquote
+Einsatz
+Wetteinsatz
+Buchmacher
+Wettanbieter
+Wettschein
+Einzelwette
+Kombiwette
+Systemwette
+Livewette
+Cashout
+Bankroll
+Freiwette
+Freebet
+Bonus
+Umsatzbedingungen
+Rollover
+Wettsteuer
+
+# --- Arbitrage und Value ---
+Arbitrage
+Arbitragewette
+Surebet
+Sure Bet
+Value Bet
+Valuewette
+Hedge
+Hedging
+Gegenwette
+Absicherung
+Margin
+Marge
+Overround
+Vigorish
+Buchmachermarge
+Rendite vor Gebuehren
+
+# --- Exchange-Begriffe ---
+Back
+Lay
+Lay-Wette
+Back-Wette
+Liquiditaet
+Orderbuch
+Spread
+Kommission
+Provision
+Gebuehr
+Matched Betting
+Teilausfuehrung
+
+# --- Rechnen und Statistik ---
+Erwartungswert
+Rendite
+Yield
+Wahrscheinlichkeit
+implizite Wahrscheinlichkeit
+faire Quote
+Fair Value
+Devigging
+Kelly
+Kelly-Kriterium
+Varianz
+Drawdown
+Stichprobe
+Closing Line Value
+Expected Goals
+Poisson
+Elo-Wert
+Standardabweichung
+Trefferquote
+
+# --- Sport allgemein ---
+Handicap
+Asiatisches Handicap
+Ueber Unter
+Over Under
+Doppelte Chance
+Beide Teams treffen
+Halbzeit Endstand
+Torschuetze
+Anstoss
+Nachspielzeit
+Verlaengerung
+Elfmeterschiessen
+Freistoss
+Eckball
+Gelbe Karte
+Rote Karte
+Abseits
+Aufstellung
+Ausfallquote
+Heimvorteil

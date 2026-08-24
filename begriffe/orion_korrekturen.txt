@@ -1,0 +1,108 @@
+# Orion-Korrekturliste
+# Format:  falsch gehoert = richtig
+# Wird NUR angewendet, wenn die Orion-Funktion eingeschaltet ist.
+# Gross- und Kleinschreibung ist egal beim Suchen.
+# Du kannst hier jederzeit eigene Zeilen ergaenzen.
+
+# --- Plattformen ---
+poly market = Polymarket
+poli market = Polymarket
+polly market = Polymarket
+poly markt = Polymarket
+polymarkt = Polymarket
+bett fair = Betfair
+bet fair = Betfair
+bettfair = Betfair
+bettfaehr = Betfair
+bet fehr = Betfair
+pinakel = Pinnacle
+pinnakle = Pinnacle
+smarkets = Smarkets
+match book = Matchbook
+bet drei sechs fuenf = bet365
+bet 365 = bet365
+tipiko = Tipico
+inter wetten = Interwetten
+
+# --- Arbitrage und Value ---
+schure bet = Surebet
+schurebett = Surebet
+sure bett = Surebet
+sicher bet = Surebet
+shure bet = Surebet
+suhr bet = Surebet
+arbitrasche = Arbitrage
+arbitrarsch = Arbitrage
+arbitrag = Arbitrage
+arbi trage = Arbitrage
+welju bet = Value Bet
+value bett = Value Bet
+valju bet = Value Bet
+weljubet = Value Bet
+hetsch = Hedge
+hetschen = Hedgen
+hedschen = Hedgen
+over round = Overround
+overrund = Overround
+oberround = Overround
+wigorisch = Vigorish
+mardschin = Margin
+
+# --- Exchange ---
+lai wette = Lay-Wette
+ley wette = Lay-Wette
+lay wette = Lay-Wette
+bek wette = Back-Wette
+back wette = Back-Wette
+matschd betting = Matched Betting
+matched betting = Matched Betting
+liquiditaet = Liquiditaet
+kommision = Kommission
+
+# --- Wetten allgemein ---
+kaesch aut = Cashout
+kesch out = Cashout
+cash out = Cashout
+cash aut = Cashout
+frie bet = Freebet
+free bett = Freebet
+frei wette = Freiwette
+bank roll = Bankroll
+benk roll = Bankroll
+wett schein = Wettschein
+kombi wette = Kombiwette
+system wette = Systemwette
+einzel wette = Einzelwette
+live wette = Livewette
+roll over = Rollover
+umsatz bedingungen = Umsatzbedingungen
+
+# --- Rechnen ---
+erwartungs wert = Erwartungswert
+kelli kriterium = Kelly-Kriterium
+kelly kriterium = Kelly-Kriterium
+kelli = Kelly
+draw down = Drawdown
+draht down = Drawdown
+closing line value = Closing Line Value
+expected gohls = Expected Goals
+expected goals = Expected Goals
+puasson = Poisson
+poason = Poisson
+de wigging = Devigging
+devigging = Devigging
+faire quoten = faire Quote
+implizite wahrscheinlichkeit = implizite Wahrscheinlichkeit
+
+# --- Sport ---
+haendikaep = Handicap
+handi cap = Handicap
+hendikep = Handicap
+asiatisches handicap = Asiatisches Handicap
+ueber unter = Ueber Unter
+over under = Over Under
+doppelte chance = Doppelte Chance
+tor schuetze = Torschuetze
+nach spielzeit = Nachspielzeit
+gelb karte = Gelbe Karte
+rot karte = Rote Karte

@@ -1,0 +1,284 @@
+/* ==================================================================
+   Transkript - reine DESIGN-SCHICHT.
+
+   Diese Datei darf komplett geloescht werden. Dann sieht die App nackt
+   aus, funktioniert aber zu hundert Prozent weiter. Hier steht kein
+   einziger Rechenweg und keine Ablaufsteuerung, nur Aussehen.
+   ================================================================== */
+
+:root {
+  --grund:        #0e1116;
+  --karte:        #161b22;
+  --karte-rand:   #232a35;
+  --schrift:      #e6edf3;
+  --schrift-leise:#8b949e;
+  --akzent:       #3b82f6;
+  --akzent-hell:  #60a5fa;
+  --orion:        #f59e0b;
+  --gut:          #22c55e;
+  --gefahr:       #ef4444;
+  --rundung:      12px;
+  --schatten:     0 2px 14px rgba(0,0,0,.35);
+}
+
+* { box-sizing: border-box; }
+
+body {
+  margin: 0;
+  padding: 0 16px 40px;
+  background: var(--grund);
+  color: var(--schrift);
+  font-family: "Segoe UI", system-ui, -apple-system, sans-serif;
+  font-size: 15px;
+  line-height: 1.55;
+  max-width: 1000px;
+  margin-inline: auto;
+  -webkit-text-size-adjust: 100%;
+}
+
+h1 { font-size: 21px; margin: 0; letter-spacing: -.3px; }
+h2 { font-size: 15px; margin: 0 0 12px; color: var(--schrift-leise);
+     text-transform: uppercase; letter-spacing: .8px; font-weight: 600; }
+
+/* ------------------------------ Kopf ------------------------------ */
+
+.kopf {
+  display: flex; align-items: center; justify-content: space-between;
+  gap: 16px; padding: 20px 0 16px; flex-wrap: wrap;
+}
+
+.schalter {
+  display: inline-flex; align-items: center; gap: 10px;
+  cursor: pointer; user-select: none;
+  background: var(--karte); border: 1px solid var(--karte-rand);
+  padding: 7px 14px 7px 10px; border-radius: 999px;
+  transition: border-color .18s;
+}
+.schalter:hover { border-color: var(--orion); }
+.schalter input { display: none; }
+
+.schieber {
+  width: 38px; height: 21px; border-radius: 999px;
+  background: #30363d; position: relative; flex: none;
+  transition: background .2s;
+}
+.schieber::after {
+  content: ""; position: absolute; top: 3px; left: 3px;
+  width: 15px; height: 15px; border-radius: 50%;
+  background: #8b949e; transition: transform .2s, background .2s;
+}
+.schalter input:checked + .schieber { background: rgba(245,158,11,.35); }
+.schalter input:checked + .schieber::after {
+  transform: translateX(17px); background: var(--orion);
+}
+.schalterText { font-size: 13.5px; font-weight: 600; color: var(--schrift-leise); }
+.schalter input:checked ~ .schalterText { color: var(--orion); }
+
+/* ------------------------------ Reiter ------------------------------ */
+
+.reiter {
+  display: flex; gap: 4px; margin-bottom: 16px;
+  background: var(--karte); padding: 4px;
+  border: 1px solid var(--karte-rand); border-radius: var(--rundung);
+  overflow-x: auto;
+}
+.reiterKnopf {
+  flex: 1; min-width: 78px; padding: 9px 12px;
+  background: transparent; border: 0; border-radius: 8px;
+  color: var(--schrift-leise); font: inherit; font-weight: 600;
+  font-size: 14px; cursor: pointer; transition: background .15s, color .15s;
+}
+.reiterKnopf:hover { color: var(--schrift); }
+.reiterKnopf.aktiv { background: var(--akzent); color: #fff; }
+
+.tafel { display: none; }
+.tafel.aktiv { display: block; }
+
+/* ------------------------------ Karten ------------------------------ */
+
+.karte {
+  background: var(--karte); border: 1px solid var(--karte-rand);
+  border-radius: var(--rundung); padding: 18px; margin-bottom: 16px;
+  box-shadow: var(--schatten);
+}
+
+.feld { display: block; margin-bottom: 14px; }
+.feld > span {
+  display: block; font-size: 12.5px; font-weight: 600;
+  color: var(--schrift-leise); margin-bottom: 6px;
+}
+.feld.ankreuz {
+  display: flex; align-items: center; gap: 9px; cursor: pointer;
+}
+.feld.ankreuz > span { margin: 0; font-weight: 500; color: var(--schrift); }
+
+input[type=text], select, textarea {
+  width: 100%; padding: 10px 12px;
+  background: #0d1117; color: var(--schrift);
+  border: 1px solid var(--karte-rand); border-radius: 9px;
+  font: inherit; font-size: 14.5px; transition: border-color .15s;
+}
+textarea { font-family: "Consolas", ui-monospace, monospace; font-size: 13px;
+           line-height: 1.6; resize: vertical; }
+input:focus, select:focus, textarea:focus {
+  outline: none; border-color: var(--akzent);
+}
+input[type=checkbox] { width: 17px; height: 17px; accent-color: var(--akzent); }
+select:disabled, input:disabled { opacity: .5; }
+
+/* ------------------------------ Knoepfe ------------------------------ */
+
+.knopfReihe { display: flex; gap: 9px; flex-wrap: wrap; margin-top: 4px; }
+
+.knopf {
+  padding: 10px 18px; border-radius: 9px; cursor: pointer;
+  background: #21262d; color: var(--schrift);
+  border: 1px solid var(--karte-rand);
+  font: inherit; font-size: 14px; font-weight: 600;
+  transition: background .15s, transform .08s, opacity .15s;
+}
+.knopf:hover:not(:disabled) { background: #2d333b; }
+.knopf:active:not(:disabled) { transform: translateY(1px); }
+.knopf:disabled { opacity: .38; cursor: not-allowed; }
+
+.knopf.haupt { background: var(--akzent); border-color: var(--akzent); color: #fff; }
+.knopf.haupt:hover:not(:disabled) { background: var(--akzent-hell); }
+.knopf.gefahr { background: transparent; border-color: var(--gefahr); color: #fca5a5; }
+.knopf.gefahr:hover:not(:disabled) { background: rgba(239,68,68,.14); }
+.knopf.still { background: transparent; color: var(--schrift-leise); }
+.knopf.still:hover { color: var(--schrift); }
+
+/* ------------------------------ Pegel ------------------------------ */
+
+.pegelBalken {
+  height: 5px; background: #0d1117; border-radius: 999px;
+  overflow: hidden; margin: 4px 0 16px;
+}
+.pegelFuellung {
+  height: 100%; width: 0;
+  background: linear-gradient(90deg, var(--gut), var(--orion));
+  border-radius: 999px; transition: width .18s ease-out;
+}
+
+body.nimmtAuf .pegelBalken { box-shadow: 0 0 0 1px rgba(34,197,94,.28); }
+
+/* ------------------------------ Ablegefeld ------------------------------ */
+
+.ablegeFeld {
+  border: 2px dashed var(--karte-rand); border-radius: var(--rundung);
+  padding: 34px 20px; text-align: center; cursor: pointer;
+  transition: border-color .18s, background .18s;
+}
+.ablegeFeld:hover, .ablegeFeld.darueber {
+  border-color: var(--akzent); background: rgba(59,130,246,.07);
+}
+.ablegeFeld p { margin: 0 0 6px; }
+.klein { font-size: 13px; color: var(--schrift-leise); }
+
+.auftrag {
+  margin-top: 12px; padding: 12px 14px; border-radius: 10px;
+  background: #0d1117; border-left: 3px solid var(--schrift-leise);
+}
+.auftrag.laeuft { border-left-color: var(--akzent); }
+.auftrag.fertig { border-left-color: var(--gut); }
+.auftrag.fehler { border-left-color: var(--gefahr); }
+.auftragKopf { display: flex; justify-content: space-between; align-items: center; gap: 10px; }
+.auftragText { font-size: 13px; color: var(--schrift-leise); margin-top: 3px; }
+.wegKnopf {
+  background: none; border: 0; color: var(--schrift-leise);
+  font-size: 20px; line-height: 1; cursor: pointer; padding: 0 4px;
+}
+.wegKnopf:hover { color: var(--gefahr); }
+
+/* ------------------------------ Transkript ------------------------------ */
+
+.transkriptKarte { border-color: #2b3441; }
+
+.transkriptKopf {
+  display: flex; align-items: baseline; justify-content: space-between;
+  gap: 12px; margin-bottom: 12px; flex-wrap: wrap;
+}
+.transkriptKopf h2 { margin: 0; }
+
+.zahlenZeile { font-size: 12.5px; color: var(--schrift-leise); }
+
+.transkript {
+  max-height: 46vh; overflow-y: auto; padding: 4px 4px 4px 0;
+  margin-bottom: 16px; scroll-behavior: smooth;
+}
+.transkript::-webkit-scrollbar { width: 9px; }
+.transkript::-webkit-scrollbar-thumb {
+  background: #2d333b; border-radius: 999px;
+}
+
+.absatz { display: flex; gap: 14px; margin-bottom: 14px; }
+.absatzZeit {
+  flex: none; width: 48px; font-size: 11.5px; font-variant-numeric: tabular-nums;
+  color: #55606d; padding-top: 4px; text-align: right; user-select: none;
+}
+.absatz p { margin: 0; }
+
+.leer { color: var(--schrift-leise); font-size: 14px; text-align: center;
+        padding: 22px 10px; margin: 0; }
+
+/* ------------------------------ Ablage ------------------------------ */
+
+.ablageZeile {
+  display: flex; justify-content: space-between; align-items: center; gap: 14px;
+  padding: 11px 13px; margin-top: 8px; border-radius: 9px;
+  background: #0d1117; border: 1px solid transparent;
+  color: var(--schrift); text-decoration: none; transition: border-color .15s;
+}
+.ablageZeile:hover { border-color: var(--akzent); }
+.ablageName { font-size: 13.5px; word-break: break-all; }
+.ablageInfo { font-size: 12px; color: var(--schrift-leise); flex: none; }
+
+/* ------------------------------ Protokoll ------------------------------ */
+
+.protokollKasten {
+  background: var(--karte); border: 1px solid var(--karte-rand);
+  border-radius: var(--rundung); padding: 12px 18px;
+}
+.protokollKasten summary {
+  cursor: pointer; font-size: 13px; font-weight: 600;
+  color: var(--schrift-leise); user-select: none;
+}
+.protokollKasten pre {
+  font-family: "Consolas", ui-monospace, monospace; font-size: 11.5px;
+  color: var(--schrift-leise); white-space: pre-wrap; word-break: break-word;
+  margin: 12px 0 0; max-height: 190px; overflow-y: auto;
+}
+
+/* ------------------------------ Meldung ------------------------------ */
+
+.meldung {
+  position: fixed; left: 50%; bottom: 22px;
+  transform: translate(-50%, 130%);
+  background: #21262d; color: var(--schrift);
+  border: 1px solid var(--karte-rand); border-left: 3px solid var(--akzent);
+  padding: 12px 20px; border-radius: 10px; box-shadow: var(--schatten);
+  font-size: 14px; max-width: min(560px, calc(100vw - 32px));
+  opacity: 0; transition: transform .28s, opacity .28s; z-index: 50;
+}
+.meldung.sichtbar { transform: translate(-50%, 0); opacity: 1; }
+.meldung.fehler { border-left-color: var(--gefahr); }
+
+/* -------------------- Orion aus: Farbe zurueckziehen -------------------- */
+
+body.orionAus .schalterText { color: var(--schrift-leise); }
+
+/* ------------------------------ Handy ------------------------------ */
+
+@media (max-width: 620px) {
+  body { padding: 0 12px 32px; font-size: 15.5px; }
+  .kopf { padding: 16px 0 12px; }
+  .karte { padding: 15px; }
+  .knopfReihe .knopf { flex: 1 1 auto; text-align: center; }
+  .absatzZeit { display: none; }
+  .transkript { max-height: 40vh; }
+  .ablegeFeld { padding: 26px 14px; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  * { transition: none !important; scroll-behavior: auto !important; }
+}

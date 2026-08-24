@@ -1,0 +1,170 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Transkript</title>
+<link rel="stylesheet" href="stil.css">
+</head>
+<body>
+
+<header class="kopf">
+  <h1>Transkript</h1>
+  <label class="schalter" title="Fachbegriffe fuer Sportwetten und Wettboersen">
+    <input type="checkbox" id="orionSchalter">
+    <span class="schieber"></span>
+    <span class="schalterText">Orion-Funktion</span>
+  </label>
+</header>
+
+<nav class="reiter">
+  <button class="reiterKnopf aktiv" data-ziel="tafelLive">Live</button>
+  <button class="reiterKnopf" data-ziel="tafelDatei">Datei</button>
+  <button class="reiterKnopf" data-ziel="tafelOrion">Orion</button>
+  <button class="reiterKnopf" data-ziel="tafelAblage">Ablage</button>
+</nav>
+
+<main>
+
+  <!-- ============ LIVE ============ -->
+  <section id="tafelLive" class="tafel aktiv">
+    <div class="karte">
+      <label class="feld">
+        <span>Aufnahmequelle</span>
+        <select id="geraetWahl"><option>wird geladen ...</option></select>
+      </label>
+      <label class="feld">
+        <span>Titel</span>
+        <input type="text" id="liveTitel" placeholder="z.B. Besprechung Montag">
+      </label>
+
+      <div class="pegelBalken"><div class="pegelFuellung" id="pegel"></div></div>
+
+      <div class="knopfReihe">
+        <button id="knopfStart" class="knopf haupt">Aufnahme starten</button>
+        <button id="knopfPause" class="knopf" disabled>Pause</button>
+        <button id="knopfStopp" class="knopf gefahr" disabled>Stoppen</button>
+      </div>
+      <p class="hinweis" id="liveStand">Bereit.</p>
+    </div>
+  </section>
+
+  <!-- ============ DATEI ============ -->
+  <section id="tafelDatei" class="tafel">
+    <div class="karte">
+      <div class="ablegeFeld" id="ablegeFeld">
+        <p><strong>Audiodatei hierher ziehen</strong></p>
+        <p class="klein">oder tippen zum Auswaehlen. Kurz oder stundenlang,
+           beides geht. MP3, WAV, M4A, MP4, OGG, OPUS und mehr.</p>
+        <input type="file" id="dateiWahl" accept="audio/*,video/*" multiple hidden>
+      </div>
+      <div id="auftragsListe"></div>
+    </div>
+  </section>
+
+  <!-- ============ ORION ============ -->
+  <section id="tafelOrion" class="tafel">
+    <div class="karte">
+      <p class="hinweis">
+        Die Orion-Funktion gibt dem Programm die Fachsprache mit: Wettboersen,
+        Quotenrechnung, Arbitrage. Ist sie aus, transkribiert das Programm
+        voellig normal, ohne jeden Fachwort-Einfluss.
+      </p>
+      <p class="zahlenZeile">
+        <span id="zahlBegriffe">0</span> Begriffe &nbsp;&middot;&nbsp;
+        <span id="zahlKorrekturen">0</span> Korrekturregeln
+      </p>
+
+      <label class="feld">
+        <span>Fachbegriffe (eine Zeile = ein Begriff)</span>
+        <textarea id="feldBegriffe" rows="12" spellcheck="false"></textarea>
+      </label>
+
+      <label class="feld">
+        <span>Korrekturen (falsch gehoert = richtig)</span>
+        <textarea id="feldKorrekturen" rows="8" spellcheck="false"></textarea>
+      </label>
+
+      <div class="knopfReihe">
+        <button id="knopfBegriffeSpeichern" class="knopf haupt">
+          Speichern und neu laden
+        </button>
+      </div>
+    </div>
+
+    <div class="karte">
+      <h2>Einstellungen</h2>
+      <label class="feld">
+        <span>Modell fuer Live (schnell)</span>
+        <select id="modellLive">
+          <option value="tiny">tiny, sehr schnell, ungenau</option>
+          <option value="base">base, schnell</option>
+          <option value="small">small, guter Kompromiss</option>
+          <option value="medium">medium, genau, langsam</option>
+        </select>
+      </label>
+      <label class="feld">
+        <span>Modell fuer Dateien (genau)</span>
+        <select id="modellDatei">
+          <option value="small">small, schnell</option>
+          <option value="medium">medium, empfohlen</option>
+          <option value="large-v3-turbo">large-v3-turbo, am besten, sehr langsam</option>
+        </select>
+      </label>
+      <label class="feld">
+        <span>Sprache</span>
+        <select id="sprache">
+          <option value="de">Deutsch</option>
+          <option value="auto">selbst erkennen</option>
+        </select>
+      </label>
+      <label class="feld ankreuz">
+        <input type="checkbox" id="zeitstempel">
+        <span>Zeitstempel im Transkript anzeigen</span>
+      </label>
+    </div>
+  </section>
+
+  <!-- ============ ABLAGE ============ -->
+  <section id="tafelAblage" class="tafel">
+    <div class="karte">
+      <div class="knopfReihe">
+        <button id="knopfOrdner" class="knopf">Ordner oeffnen</button>
+      </div>
+      <div id="ablageListe"></div>
+    </div>
+  </section>
+
+  <!-- ============ TRANSKRIPT (immer sichtbar) ============ -->
+  <section class="karte transkriptKarte">
+    <div class="transkriptKopf">
+      <h2>Transkript</h2>
+      <span class="zahlenZeile" id="transkriptZahlen">noch leer</span>
+    </div>
+
+    <div id="transkript" class="transkript">
+      <p class="leer">Noch nichts aufgenommen. Starte links eine Aufnahme
+         oder lege eine Audiodatei ab.</p>
+    </div>
+
+    <div class="knopfReihe">
+      <button class="knopf haupt" data-format="pdf">Als PDF</button>
+      <button class="knopf" data-format="docx">Als Word</button>
+      <button class="knopf" data-format="txt">Als Text</button>
+      <button class="knopf still" id="knopfKopieren">Kopieren</button>
+      <button class="knopf still" id="knopfLeeren">Leeren</button>
+    </div>
+  </section>
+
+  <details class="protokollKasten">
+    <summary>Protokoll</summary>
+    <pre id="protokoll"></pre>
+  </details>
+
+</main>
+
+<div id="meldung" class="meldung"></div>
+
+<script src="logik.js"></script>
+</body>
+</html>
