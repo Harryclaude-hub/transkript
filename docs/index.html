@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="theme-color" content="#0e1116">
 <title>Transkript</title>
-<link rel="stylesheet" href="stil.css">
+<link rel="stylesheet" href="stil.css?v=3">
 <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><text y='26' font-size='26'>&#128221;</text></svg>">
 </head>
 <body>
@@ -23,8 +23,10 @@
 
 <nav class="reiter">
   <button class="reiterKnopf aktiv" data-ziel="tafelAufnahme">Aufnahme</button>
+  <button class="reiterKnopf" data-ziel="tafelDatei">Datei</button>
+  <button class="reiterKnopf" data-ziel="tafelStimmen">Stimmen</button>
   <button class="reiterKnopf" data-ziel="tafelOrion">Orion</button>
-  <button class="reiterKnopf" data-ziel="tafelInfo">Info</button>
+  <button class="reiterKnopf" data-ziel="tafelAblage">Ablage</button>
 </nav>
 
 <main>
@@ -37,6 +39,8 @@
         <input type="text" id="titel" placeholder="z.B. Besprechung Montag">
       </label>
 
+      <div class="pegelBalken"><div class="pegelFuellung" id="pegel"></div></div>
+
       <div class="standZeile">
         <span class="punkt" id="punkt"></span>
         <span id="uhr">00:00</span>
@@ -47,13 +51,119 @@
         <button id="knopfStart" class="knopf haupt">Aufnahme starten</button>
         <button id="knopfPause" class="knopf" disabled>Pause</button>
         <button id="knopfStopp" class="knopf gefahr" disabled>Stoppen</button>
-        <button id="knopfTon" class="knopf still" hidden>Tonaufnahme laden</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ DATEI ============ -->
+  <section id="tafelDatei" class="tafel">
+    <div class="karte">
+      <div class="ablegeFeld" id="ablegeFeld">
+        <p><strong>Audiodatei hierher ziehen</strong></p>
+        <p class="klein">oder tippen zum Auswaehlen.
+           MP3, WAV, M4A, MP4, OGG, OPUS, FLAC und mehr.</p>
+        <input type="file" id="dateiWahl" accept="audio/*,video/*" hidden>
       </div>
       <p class="hinweis klein">
-        Der Ton wird nebenher als Datei mitgeschnitten. Nach dem Stoppen
-        kannst du ihn herunterladen und in die Laptop-Fassung geben, dort
-        werden dann auch die Stimmen getrennt.
+        Die Datei wird hier im Browser verarbeitet, sie geht nirgendwohin.
+        Lange Dateien brauchen entsprechend lange und viel Arbeitsspeicher.
       </p>
+    </div>
+  </section>
+
+  <!-- ============ STIMMEN ============ -->
+  <section id="tafelStimmen" class="tafel">
+    <div class="karte">
+      <h2>Genauigkeit der Spracherkennung</h2>
+      <label class="feld">
+        <select id="modellGroesse">
+          <option value="klein">klein, schnell, ungenauer (~40 MB)</option>
+          <option value="mittel">mittel, empfohlen (~45 MB)</option>
+          <option value="gross">gross, am genauesten, langsam (~130 MB)</option>
+        </select>
+      </label>
+      <p class="hinweis klein" id="modellStand">
+        Wird beim ersten Mal geholt und danach im Browser behalten.
+      </p>
+    </div>
+
+    <div class="karte">
+      <h2>Empfindlichkeit</h2>
+      <p class="hinweis">
+        Wie viel mitgeschrieben wird. Hoch heisst: auch leise Stimmen und
+        kurze Zwischenrufe kommen mit. Dafuer landet auch mal ein Rascheln
+        im Text.
+      </p>
+      <div class="schieberZeile">
+        <input type="range" id="empfindlichkeit" min="1" max="5" step="1" value="4">
+        <span class="schieberWert" id="empfindlichkeitText">4</span>
+      </div>
+      <div class="schieberBeschriftung">
+        <span>nur laute Stimmen</span><span>auch Gemurmel</span>
+      </div>
+    </div>
+
+    <div class="karte">
+      <h2>Stimmen trennen</h2>
+      <label class="feld ankreuz">
+        <input type="checkbox" id="stimmenAn" checked>
+        <span>Erkennen, wer gerade spricht</span>
+      </label>
+      <p class="hinweis klein">
+        Nach dem Stoppen wird die Tonspur noch einmal durchgegangen und
+        jede Stimme bekommt ihren eigenen Fingerabdruck. Beim ersten Mal
+        werden dafuer rund 100 MB geholt.
+      </p>
+
+      <label class="feld">
+        <span>Anzahl Personen</span>
+        <select id="anzahlPersonen">
+          <option value="0">selbst herausfinden</option>
+          <option value="2">genau 2</option>
+          <option value="3">genau 3</option>
+          <option value="4">genau 4</option>
+          <option value="5">genau 5</option>
+          <option value="6">genau 6</option>
+          <option value="8">genau 8</option>
+          <option value="10">genau 10</option>
+        </select>
+      </label>
+
+      <label class="feld">
+        <span>Wie schnell zwei Stimmen als verschiedene Personen gelten</span>
+        <div class="schieberZeile">
+          <input type="range" id="aehnlichkeit" min="0.70" max="0.95" step="0.01" value="0.83">
+          <span class="schieberWert" id="aehnlichkeitText">0.83</span>
+        </div>
+        <div class="schieberBeschriftung">
+          <span>eher weniger Personen</span><span>eher mehr</span>
+        </div>
+      </label>
+    </div>
+
+    <div class="karte">
+      <h2>Geraeusche erkennen</h2>
+      <label class="feld ankreuz">
+        <input type="checkbox" id="toeneAn">
+        <span>Musik, Hund, Applaus und aehnliches eintragen</span>
+      </label>
+      <p class="hinweis klein">
+        Nur in den Sprechpausen. Dieser Teil ist der langsamste und holt
+        beim ersten Mal rund 90 MB, deshalb ist er ab Werk aus.
+      </p>
+
+      <label class="feld ankreuz">
+        <input type="checkbox" id="musikWeglassen">
+        <span>Musik nicht eintragen</span>
+      </label>
+
+      <label class="feld">
+        <span>Ab welcher Sicherheit ein Geraeusch eingetragen wird</span>
+        <div class="schieberZeile">
+          <input type="range" id="tonSchwelle" min="0.15" max="0.7" step="0.05" value="0.3">
+          <span class="schieberWert" id="tonSchwelleText">0.30</span>
+        </div>
+      </label>
     </div>
   </section>
 
@@ -61,10 +171,9 @@
   <section id="tafelOrion" class="tafel">
     <div class="karte">
       <p class="hinweis">
-        Die Orion-Funktion zieht Fachbegriffe gerade, die die Spracherkennung
-        verhoert hat. Aus &bdquo;Polimarket&ldquo; wird &bdquo;Polymarket&ldquo;,
-        aus &bdquo;schure bet&ldquo; wird &bdquo;Surebet&ldquo;. Ist sie aus,
-        bleibt der Text genau so, wie er erkannt wurde.
+        Die Orion-Funktion zieht Fachbegriffe gerade, die verhoert wurden.
+        Aus &bdquo;Polimarket&ldquo; wird &bdquo;Polymarket&ldquo;. Ist sie
+        aus, bleibt der Text genau so, wie er erkannt wurde.
       </p>
       <p class="zahlenZeile">
         <span id="zahlBegriffe">0</span> Begriffe &nbsp;&middot;&nbsp;
@@ -73,77 +182,46 @@
 
       <label class="feld">
         <span>Fachbegriffe (eine Zeile = ein Begriff)</span>
-        <textarea id="feldBegriffe" rows="10" spellcheck="false"></textarea>
+        <textarea id="feldBegriffe" rows="9" spellcheck="false"></textarea>
       </label>
-
       <label class="feld">
         <span>Korrekturen (falsch gehoert = richtig)</span>
-        <textarea id="feldKorrekturen" rows="8" spellcheck="false"></textarea>
+        <textarea id="feldKorrekturen" rows="7" spellcheck="false"></textarea>
       </label>
 
       <div class="knopfReihe">
         <button id="knopfBegriffeSpeichern" class="knopf haupt">Speichern</button>
         <button id="knopfBegriffeZurueck" class="knopf still">Auf Standard zuruecksetzen</button>
       </div>
-      <p class="hinweis klein">
-        Deine Aenderungen bleiben in diesem Browser gespeichert.
-      </p>
+    </div>
+
+    <div class="karte">
+      <h2>Sprache</h2>
+      <label class="feld">
+        <select id="sprache">
+          <option value="de">Deutsch</option>
+          <option value="en">Englisch</option>
+          <option value="auto">selbst erkennen</option>
+        </select>
+      </label>
+      <label class="feld ankreuz">
+        <input type="checkbox" id="zeitstempel">
+        <span>Zeitstempel in der heruntergeladenen Datei</span>
+      </label>
     </div>
   </section>
 
-  <!-- ============ INFO ============ -->
-  <section id="tafelInfo" class="tafel">
+  <!-- ============ ABLAGE ============ -->
+  <section id="tafelAblage" class="tafel">
     <div class="karte">
-      <h2>Was diese Seite kann</h2>
-      <p class="hinweis">
-        Mitschreiben, was du sprichst, und das Ergebnis als PDF, Word-Datei
-        oder Text herunterladen. Ohne Installation, auch am Handy.
-      </p>
-
-      <h2>Was du wissen solltest</h2>
-      <ul class="liste">
-        <li><strong>Die Spracherkennung kommt vom Browser.</strong> Chrome und
-            Edge schicken den Ton dafuer an Google. Fuer Vertrauliches nimm die
-            Laptop-Fassung, die rechnet offline.</li>
-        <li><strong>Das Fenster muss offen und sichtbar bleiben.</strong>
-            Legst du das Handy weg oder wechselst den Reiter, pausiert der
-            Browser die Erkennung.</li>
-        <li><strong>Es braucht Internet</strong> und ein Mikrofon, dem du den
-            Zugriff erlaubst.</li>
-      </ul>
-
-      <h2>Was hier nicht geht</h2>
-      <p class="hinweis">
-        Die Spracherkennung des Browsers gibt nur fertigen Text heraus, den
-        Ton selbst ruecken sie nicht heraus. Deshalb ist auf dieser Seite
-        nicht moeglich:
-      </p>
-      <ul class="liste">
-        <li><strong>Wer spricht gerade.</strong> Person 1, Person 2 und so
-            weiter kann nur die Laptop-Fassung.</li>
-        <li><strong>Musik, Hund, Applaus erkennen.</strong> Ebenfalls nur am
-            Laptop.</li>
-        <li><strong>Saetze antippen und anhoeren.</strong> Auch das braucht
-            die Tonspur.</li>
-        <li><strong>Audiodateien verarbeiten.</strong></li>
-      </ul>
-      <p class="hinweis">
-        Als Bruecke schneidet diese Seite den Ton nebenher als Datei mit.
-        Nach dem Stoppen auf <em>Tonaufnahme laden</em> druecken und die
-        Datei in die Laptop-Fassung ziehen, dort bekommst du dann Personen,
-        Geraeusche und das Anhoeren dazu.
-      </p>
-
-      <h2>Die Fassung fuer den Laptop</h2>
-      <p class="hinweis">
-        Laeuft komplett offline, trennt die Stimmen, erkennt Musik und
-        Geraeusche, nimmt im Hintergrund auf, verarbeitet Audiodateien jeder
-        Laenge und kann den PC-Ton mitschneiden.
-      </p>
-      <p>
-        <a class="knopf" href="https://github.com/Harryclaude-hub/transkript"
-           target="_blank" rel="noopener">Zum Programm auf GitHub</a>
-      </p>
+      <h2>Gespeicherte Transkripte</h2>
+      <div class="knopfReihe">
+        <button id="knopfAblageSpeichern" class="knopf haupt">Aktuelles speichern</button>
+        <button id="knopfNeu" class="knopf">Neues Transkript</button>
+        <button id="knopfTon" class="knopf still">Tonaufnahme laden</button>
+      </div>
+      <p class="hinweis klein" id="platzStand"></p>
+      <div id="ablageListe"></div>
     </div>
   </section>
 
@@ -154,9 +232,12 @@
       <span class="zahlenZeile" id="transkriptZahlen">noch leer</span>
     </div>
 
+    <div id="personenLeiste" class="personenLeiste"></div>
+
     <div id="transkript" class="transkript">
       <p class="leer">Noch nichts aufgenommen.
-         Druecke oben auf &bdquo;Aufnahme starten&ldquo;.</p>
+         Druecke oben auf &bdquo;Aufnahme starten&ldquo; oder lege eine
+         Audiodatei ab.</p>
     </div>
 
     <p class="vorlaeufig" id="vorlaeufig"></p>
@@ -165,18 +246,25 @@
       <button class="knopf haupt" data-format="pdf">Als PDF</button>
       <button class="knopf" data-format="doc">Als Word</button>
       <button class="knopf" data-format="txt">Als Text</button>
+      <button class="knopf still" id="knopfSprecher">Stimmen bestimmen</button>
       <button class="knopf still" id="knopfKopieren">Kopieren</button>
       <button class="knopf still" id="knopfLeeren">Leeren</button>
     </div>
+    <p class="hinweis klein" id="filterHinweis"></p>
   </section>
+
+  <details class="protokollKasten">
+    <summary>Was gerade passiert</summary>
+    <pre id="protokoll"></pre>
+  </details>
 
 </main>
 
 <div id="meldung" class="meldung"></div>
 
-<script src="begriffe.js"></script>
-<script src="orion.js"></script>
-<script src="pdf.js"></script>
-<script src="logik.js"></script>
+<script src="begriffe.js?v=3"></script>
+<script src="orion.js?v=3"></script>
+<script src="pdf.js?v=3"></script>
+<script type="module" src="logik.js?v=3"></script>
 </body>
 </html>

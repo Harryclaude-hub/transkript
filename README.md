@@ -26,23 +26,44 @@ Edge schicken den Ton dafür an Google.
 Hintergrund auf, verarbeitet Audiodateien jeder Länge und kann den PC-Ton
 mitschneiden.
 
+**Beide Fassungen rechnen lokal.** Die Browser-Fassung benutzt seit dem
+letzten Umbau nicht mehr die Diktierfunktion von Chrome (die den Ton an
+Google schickt), sondern lädt die Modelle einmalig herunter und rechnet
+danach im Browser selbst. Nichts verlässt das Gerät.
+
 | | Im Browser | Am Laptop |
 |---|---|---|
 | Installation | keine | einmalig, 10 bis 25 min |
-| Erkennung läuft | bei Google | auf deinem Rechner |
-| **Wer spricht (Person 1, 2, 3 …)** | nein | **ja** |
-| **Musik, Hund, Applaus erkennen** | nein | **ja** |
-| **Satz antippen und anhören** | nein | **ja** |
-| **Nach Personen gefiltert laden** | nein | **ja** |
-| Audiodateien | nein | ja, beliebig lang |
+| Erste Nutzung | ~150 MB Modelle laden | 3,8 GB Modelle laden |
+| Erkennung läuft | **auf deinem Gerät** | auf deinem Rechner |
+| Wer spricht (Person 1, 2, 3 …) | **ja** | ja |
+| Musik, Hund, Applaus erkennen | ja, zuschaltbar | ja |
+| Satz antippen und anhören | **ja** | ja |
+| Nach Personen gefiltert laden | **ja** | ja |
+| Audiodateien | **ja** | ja, beliebig lang |
+| Transkripte speichern | ja, im Browser | ja, als Datei |
 | Im Hintergrund | nein, Fenster muss offen bleiben | ja |
 | PC-Ton mitschneiden | nein | ja |
 | Orion-Funktion | Korrektur danach | Vorspann **und** Korrektur |
+| Tempo (1 Std Ton) | ca. 45 min | ca. 40 min |
 
-Der Grund für die Lücken links: die Spracherkennung des Browsers liefert
-nur fertigen Text, sie gibt die Tonspur nicht heraus. Ohne Ton keine
-Stimmentrennung und kein Abspielen. Die Browser-Fassung schneidet den Ton
-deshalb nebenher als Datei mit, die man in die Laptop-Fassung geben kann.
+Was am Laptop besser bleibt: Hintergrundbetrieb, PC-Ton, sehr lange
+Dateien (der Browser hält den Ton im Arbeitsspeicher) und die genaueren
+Modelle.
+
+### Modelle der Browser-Fassung
+
+| Zweck | Modell | Größe |
+|---|---|---|
+| Text | `onnx-community/whisper-base` | ~45 MB |
+| Sprecher trennen | `onnx-community/pyannote-segmentation-3.0` | 6 MB |
+| Stimm-Fingerabdruck | `Xenova/wavlm-base-plus-sv` | ~95 MB |
+| Geräusche | `Xenova/ast-finetuned-audioset` | ~90 MB, zuschaltbar |
+
+Alles über [transformers.js](https://huggingface.co/docs/transformers.js).
+Gemessen auf einem i5-10210U mit Intel UHD: pyannote 57x Echtzeit, whisper
+1,30x. **WebGPU war auf dieser Grafik langsamer als die CPU** (0,89x), die
+Fassung rechnet deshalb bewusst auf der CPU.
 
 ---
 

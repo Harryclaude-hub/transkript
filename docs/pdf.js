@@ -84,13 +84,21 @@ function pdfErzeugen(titel, kopfzeilen, absaetze, mitZeit) {
   function platzPruefen(hoehe) {
     if (y - hoehe < RAND_UNTEN) neueSeite();
   }
-  function schreiben(text, groesse, fett, grau, abstand) {
+  function schreiben(text, groesse, fett, grau, abstand, farbe) {
     for (const zeile of umbrechen(text, groesse, NUTZBREITE, fett)) {
       platzPruefen(groesse * 1.45);
       y -= groesse * 1.45;
-      zeilen.push({ text: zeile, groesse: groesse, fett: fett, grau: grau, y: y });
+      zeilen.push({ text: zeile, groesse: groesse, fett: fett, grau: grau,
+                    y: y, farbe: farbe });
     }
     y -= (abstand || 0);
+  }
+
+  /* "#2563eb" -> "0.15 0.39 0.92" fuer den PDF-Farbbefehl */
+  function pdfFarbe(hex) {
+    if (!hex || hex[0] !== '#' || hex.length !== 7) return null;
+    const z = (a) => (parseInt(hex.slice(a, a + 2), 16) / 255).toFixed(3);
+    return `${z(1)} ${z(3)} ${z(5)}`;
   }
 
   /* --- Titel --- */
@@ -107,8 +115,15 @@ function pdfErzeugen(titel, kopfzeilen, absaetze, mitZeit) {
 
   /* --- Absaetze --- */
   for (const absatz of absaetze) {
-    if (mitZeit && absatz.zeit) schreiben(absatz.zeit, 8, true, true, 0);
-    schreiben(absatz.text, 10.5, false, false, 7);
+    const marke = [];
+    if (absatz.person) marke.push(absatz.person);
+    if (mitZeit && absatz.zeit) marke.push(absatz.zeit);
+
+    if (marke.length) {
+      schreiben(marke.join('   '), 9, true, !absatz.person, 0,
+                absatz.person ? pdfFarbe(absatz.farbe) : null);
+    }
+    schreiben(absatz.text, 10.5, false, !!absatz.geraeusch, 7);
   }
   seiten.push(zeilen);
 
@@ -133,7 +148,8 @@ function pdfErzeugen(titel, kopfzeilen, absaetze, mitZeit) {
     let strom = '';
     for (const z of seitenZeilen) {
       const schrift = z.fett ? '/F2' : '/F1';
-      const farbe = z.grau ? '0.45 0.45 0.45 rg' : '0.1 0.1 0.1 rg';
+      const farbe = z.farbe ? z.farbe + ' rg'
+                  : (z.grau ? '0.45 0.45 0.45 rg' : '0.1 0.1 0.1 rg');
       strom += 'BT ' + farbe + ' ' + schrift + ' ' + z.groesse + ' Tf 1 0 0 1 '
              + RAND_LINKS.toFixed(2) + ' ' + z.y.toFixed(2) + ' Tm ('
              + pdfText(z.text) + ') Tj ET\n';

@@ -232,17 +232,29 @@ Zu langsam? Im Reiter **Orion** von `medium` auf `small` stellen.
 
 ## Die Fassung im Browser
 
-Es gibt zusätzlich eine abgespeckte Fassung ohne Installation:
+Ohne Installation, auch am Handy:
 
 **https://harryclaude-hub.github.io/transkript/**
 
-Die kann Aufnahme und Herunterladen, aber **keine Stimmenerkennung, keine
-Geräusche und kein Anhören**. Grund: sie benutzt die Spracherkennung des
-Browsers, und die gibt nur fertigen Text heraus, nie die Tonspur.
+Die kann seit dem Umbau fast alles, was die Laptop-Fassung kann, und
+rechnet dabei **ebenfalls lokal**. Beim ersten Besuch werden rund 150 MB
+Modelle geholt, danach bleiben sie im Browser und es geht auch ohne
+Internet. Kein Ton geht an Google oder sonst wohin.
 
-Sie schneidet den Ton aber nebenher als Datei mit. Nach dem Stoppen auf
-**Tonaufnahme laden** drücken und die Datei hier im Reiter **Datei**
-hineinziehen, dann bekommst du Personen und Geräusche nachträglich dazu.
+Drin: Aufnahme, Audiodateien, Wer-spricht, Sätze antippen und anhören,
+nach Personen gefiltert herunterladen, Ablage.
+
+Nicht drin, dafür bleibt der Laptop zuständig:
+
+- **Hintergrundbetrieb.** Der Browser muss offen und sichtbar bleiben.
+- **PC-Ton mitschneiden.**
+- **Sehr lange Aufnahmen.** Der Browser hält den Ton im Arbeitsspeicher,
+  rund 115 MB pro Stunde.
+- **Die genaueren Modelle.**
+
+Geräusche (Musik, Hund) sind im Browser ab Werk **aus**, weil dieser Teil
+noch einmal 90 MB holt und der langsamste ist. Im Reiter **Stimmen**
+zuschaltbar.
 
 ---
 
