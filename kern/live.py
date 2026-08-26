@@ -134,11 +134,12 @@ class LiveAufnahme:
     """Eine laufende Live-Mitschrift."""
 
     def __init__(self, geraet_id, modell_name, sprache, orion_an,
-                 block_sekunden, titel, melden):
+                 block_sekunden, titel, melden, empfindlichkeit=3):
         self.geraet_id = geraet_id
         self.modell_name = modell_name
         self.sprache = sprache
         self.orion_an = orion_an
+        self.empfindlichkeit = empfindlichkeit
         self.block_sekunden = max(8, int(block_sekunden))
         self.titel = titel or "Live-Mitschrift"
         self.melden = melden
@@ -289,6 +290,7 @@ class LiveAufnahme:
             neue, _ = motor.transkribieren(
                 block, self.modell_name, sprache=self.sprache,
                 orion_an=self.orion_an, melden=None, zeit_versatz=versatz,
+                empfindlichkeit=self.empfindlichkeit,
             )
             neue, korrekturen = motor.nachbearbeiten(neue, orion_an=self.orion_an)
             with self._schloss:

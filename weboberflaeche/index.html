@@ -20,6 +20,7 @@
 <nav class="reiter">
   <button class="reiterKnopf aktiv" data-ziel="tafelLive">Live</button>
   <button class="reiterKnopf" data-ziel="tafelDatei">Datei</button>
+  <button class="reiterKnopf" data-ziel="tafelStimmen">Stimmen</button>
   <button class="reiterKnopf" data-ziel="tafelOrion">Orion</button>
   <button class="reiterKnopf" data-ziel="tafelAblage">Ablage</button>
 </nav>
@@ -62,6 +63,100 @@
     </div>
   </section>
 
+  <!-- ============ STIMMEN ============ -->
+  <section id="tafelStimmen" class="tafel">
+    <div class="karte" id="stimmenFehlt" hidden>
+      <p class="warnung">
+        Die Modelle fuer die Stimmenerkennung fehlen noch. Einmal im Ordner
+        <code>C:\Users\Home\transkript</code> ausfuehren:
+        <code>python modelle_holen.py</code>
+      </p>
+    </div>
+
+    <div class="karte">
+      <h2>Empfindlichkeit</h2>
+      <p class="hinweis">
+        Wie viel mitgeschrieben wird. Hoch heisst: auch leise Stimmen,
+        Zwischenrufe und kurze Einwuerfe kommen mit. Dafuer landet auch
+        mal ein Rascheln im Text.
+      </p>
+      <div class="schieberZeile">
+        <input type="range" id="empfindlichkeit" min="1" max="5" step="1">
+        <span class="schieberWert" id="empfindlichkeitText">4</span>
+      </div>
+      <div class="schieberBeschriftung">
+        <span>nur laute Stimmen</span><span>auch Gemurmel</span>
+      </div>
+    </div>
+
+    <div class="karte">
+      <h2>Stimmen trennen</h2>
+      <label class="feld ankreuz">
+        <input type="checkbox" id="stimmenAn">
+        <span>Erkennen, wer gerade spricht</span>
+      </label>
+      <p class="hinweis klein">
+        Nach dem Stoppen einer Aufnahme oder nach einer Datei wird die
+        Tonspur noch einmal durchgegangen und jede Stimme bekommt ihren
+        eigenen Fingerabdruck. Gleiche Stimme = gleiche Person.
+      </p>
+
+      <label class="feld">
+        <span>Anzahl Personen</span>
+        <select id="anzahlPersonen">
+          <option value="0">selbst herausfinden</option>
+          <option value="2">genau 2</option>
+          <option value="3">genau 3</option>
+          <option value="4">genau 4</option>
+          <option value="5">genau 5</option>
+          <option value="6">genau 6</option>
+          <option value="8">genau 8</option>
+          <option value="10">genau 10</option>
+        </select>
+      </label>
+
+      <label class="feld">
+        <span>Wie schnell zwei Stimmen als verschiedene Personen gelten</span>
+        <div class="schieberZeile">
+          <input type="range" id="aehnlichkeit" min="0.3" max="0.8" step="0.05">
+          <span class="schieberWert" id="aehnlichkeitText">0.50</span>
+        </div>
+        <div class="schieberBeschriftung">
+          <span>eher mehr Personen</span><span>eher weniger</span>
+        </div>
+      </label>
+    </div>
+
+    <div class="karte">
+      <h2>Geraeusche erkennen</h2>
+      <label class="feld ankreuz">
+        <input type="checkbox" id="toeneAn">
+        <span>Musik, Hund, Applaus und aehnliches eintragen</span>
+      </label>
+      <p class="hinweis klein">
+        In den Sprechpausen wird geschaut, was sonst zu hoeren ist.
+        Erkanntes steht dann als eigene Zeile im Transkript, zum Beispiel
+        <em>[Musik]</em> oder <em>[Hund]</em>.
+      </p>
+
+      <label class="feld ankreuz">
+        <input type="checkbox" id="musikWeglassen">
+        <span>Musik nicht eintragen (wenn dauernd welche laeuft)</span>
+      </label>
+
+      <label class="feld">
+        <span>Ab welcher Sicherheit ein Geraeusch eingetragen wird</span>
+        <div class="schieberZeile">
+          <input type="range" id="tonSchwelle" min="0.15" max="0.7" step="0.05">
+          <span class="schieberWert" id="tonSchwelleText">0.35</span>
+        </div>
+        <div class="schieberBeschriftung">
+          <span>mehr erkennen</span><span>nur sichere Treffer</span>
+        </div>
+      </label>
+    </div>
+  </section>
+
   <!-- ============ ORION ============ -->
   <section id="tafelOrion" class="tafel">
     <div class="karte">
@@ -77,12 +172,11 @@
 
       <label class="feld">
         <span>Fachbegriffe (eine Zeile = ein Begriff)</span>
-        <textarea id="feldBegriffe" rows="12" spellcheck="false"></textarea>
+        <textarea id="feldBegriffe" rows="10" spellcheck="false"></textarea>
       </label>
-
       <label class="feld">
         <span>Korrekturen (falsch gehoert = richtig)</span>
-        <textarea id="feldKorrekturen" rows="8" spellcheck="false"></textarea>
+        <textarea id="feldKorrekturen" rows="7" spellcheck="false"></textarea>
       </label>
 
       <div class="knopfReihe">
@@ -93,7 +187,7 @@
     </div>
 
     <div class="karte">
-      <h2>Einstellungen</h2>
+      <h2>Erkennung</h2>
       <label class="feld">
         <span>Modell fuer Live (schnell)</span>
         <select id="modellLive">
@@ -120,7 +214,7 @@
       </label>
       <label class="feld ankreuz">
         <input type="checkbox" id="zeitstempel">
-        <span>Zeitstempel im Transkript anzeigen</span>
+        <span>Zeitstempel in der heruntergeladenen Datei</span>
       </label>
     </div>
   </section>
@@ -128,32 +222,50 @@
   <!-- ============ ABLAGE ============ -->
   <section id="tafelAblage" class="tafel">
     <div class="karte">
+      <h2>Gespeicherte Transkripte</h2>
       <div class="knopfReihe">
-        <button id="knopfOrdner" class="knopf">Ordner oeffnen</button>
+        <button id="knopfAblageSpeichern" class="knopf haupt">
+          Aktuelles Transkript speichern
+        </button>
+        <button id="knopfNeu" class="knopf">Neues Transkript</button>
       </div>
       <div id="ablageListe"></div>
     </div>
+
+    <div class="karte">
+      <h2>Heruntergeladene Dateien</h2>
+      <div class="knopfReihe">
+        <button id="knopfOrdner" class="knopf">Ordner oeffnen</button>
+      </div>
+      <div id="dateiListe"></div>
+    </div>
   </section>
 
-  <!-- ============ TRANSKRIPT (immer sichtbar) ============ -->
+  <!-- ============ TRANSKRIPT ============ -->
   <section class="karte transkriptKarte">
     <div class="transkriptKopf">
       <h2>Transkript</h2>
       <span class="zahlenZeile" id="transkriptZahlen">noch leer</span>
     </div>
 
+    <div id="personenLeiste" class="personenLeiste"></div>
+
     <div id="transkript" class="transkript">
-      <p class="leer">Noch nichts aufgenommen. Starte links eine Aufnahme
+      <p class="leer">Noch nichts aufgenommen. Starte oben eine Aufnahme
          oder lege eine Audiodatei ab.</p>
     </div>
+
+    <audio id="spieler" preload="metadata"></audio>
 
     <div class="knopfReihe">
       <button class="knopf haupt" data-format="pdf">Als PDF</button>
       <button class="knopf" data-format="docx">Als Word</button>
       <button class="knopf" data-format="txt">Als Text</button>
+      <button class="knopf still" id="knopfSprecher">Stimmen bestimmen</button>
       <button class="knopf still" id="knopfKopieren">Kopieren</button>
       <button class="knopf still" id="knopfLeeren">Leeren</button>
     </div>
+    <p class="hinweis klein" id="filterHinweis"></p>
   </section>
 
   <details class="protokollKasten">

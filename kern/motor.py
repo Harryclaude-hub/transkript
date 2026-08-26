@@ -194,22 +194,97 @@ def modell_holen(name, melden=None):
 
 
 # ----------------------------------------------------------------------
+# Wie lang ein Stueck hoechstens sein darf, das am Stueck erkannt wird.
+# Whisper arbeitet intern mit 30-Sekunden-Fenstern, darunter zu bleiben
+# kostet nichts und haelt die Bloecke uebersichtlich.
+MAX_BLOCK_SEKUNDEN = 24.0
+
+# Ab dieser Sprechpause faengt ein neuer Block an.
+# Kurze Gespraechspausen bleiben im selben Block, damit die Bloecke gut
+# gefuellt sind. Erst eine richtig lange Pause trennt.
+MAX_LUECKE_IM_BLOCK = 6.0
+
+
+def sprechstellen(ton, empfindlichkeit=3):
+    """
+    Findet die Stellen, an denen ueberhaupt jemand spricht.
+    Rueckgabe: Liste von (start_sekunde, ende_sekunde).
+    """
+    from faster_whisper.vad import get_speech_timestamps, VadOptions
+    from kern.stimmen import stufe
+
+    s = stufe(empfindlichkeit)
+    roh = get_speech_timestamps(ton, VadOptions(
+        threshold=s["vad"],
+        min_speech_duration_ms=s["min_sprache_ms"],
+        min_silence_duration_ms=int(s["min_aus"] * 1000),
+        speech_pad_ms=300,
+    ))
+    return [(x["start"] / ZIEL_RATE, x["end"] / ZIEL_RATE) for x in roh]
+
+
+def _bloecke_bilden(stellen):
+    """
+    Fasst benachbarte Sprechstellen zu Bloecken zusammen.
+
+    Warum ueberhaupt Bloecke: wird die ganze Tonspur in einem Rutsch
+    erkannt, reicht EIN Aussetzer, damit der komplette Rest fehlt. Genau
+    das passiert zum Beispiel, wenn zwischendrin Musik laeuft oder die
+    Sprache wechselt. Mit Bloecken kann ein Aussetzer immer nur ein
+    Stueck kosten, nie den Rest der Aufnahme.
+    """
+    bloecke = []
+    von = bis = None
+
+    for start, ende in stellen:
+        if von is None:
+            von, bis = start, ende
+            continue
+
+        zu_lang = (ende - von) > MAX_BLOCK_SEKUNDEN
+        grosse_luecke = (start - bis) > MAX_LUECKE_IM_BLOCK
+
+        if zu_lang or grosse_luecke:
+            bloecke.append((von, bis))
+            von, bis = start, ende
+        else:
+            bis = ende
+
+    if von is not None:
+        bloecke.append((von, bis))
+
+    # Sehr lange Einzelstuecke noch einmal aufteilen.
+    fertig = []
+    for von, bis in bloecke:
+        while bis - von > MAX_BLOCK_SEKUNDEN:
+            fertig.append((von, von + MAX_BLOCK_SEKUNDEN))
+            von += MAX_BLOCK_SEKUNDEN
+        fertig.append((von, bis))
+
+    return fertig
+
+
 def transkribieren(quelle, modell_name, sprache="de", orion_an=True,
-                   melden=None, fortschritt=None, zeit_versatz=0.0):
+                   melden=None, fortschritt=None, zeit_versatz=0.0,
+                   empfindlichkeit=3):
     """
     Wandelt Ton in Text.
 
-    quelle       : Dateipfad ODER numpy-Array mit 16000 Hz Mono float32
-    modell_name  : z.B. "small" oder "medium"
-    sprache      : "de" oder "auto"
-    orion_an     : True = Fachbegriffe werden beruecksichtigt
-    melden       : Funktion fuer Statustexte
-    fortschritt  : Funktion(sekunden_erkannt) waehrend der Erkennung
-    zeit_versatz : wird auf alle Zeitangaben addiert (fuer Live-Bloecke)
+    quelle          : Dateipfad ODER numpy-Array mit 16000 Hz Mono float32
+    modell_name     : z.B. "small" oder "medium"
+    sprache         : "de" oder "auto"
+    orion_an        : True = Fachbegriffe werden beruecksichtigt
+    melden          : Funktion fuer Statustexte
+    fortschritt     : Funktion(sekunden_erkannt) waehrend der Erkennung
+    zeit_versatz    : wird auf alle Zeitangaben addiert (fuer Live-Bloecke)
+    empfindlichkeit : 1 bis 5. Hoch heisst, auch leise Stimmen und kurze
+                      Zwischenrufe werden mitgeschrieben.
 
     Rueckgabe: (segmente, info)
       segmente = Liste von {"start", "ende", "text"}
     """
+    from kern.stimmen import stufe
+
     modell = modell_holen(modell_name, melden=melden)
 
     if not isinstance(quelle, np.ndarray):
@@ -219,31 +294,66 @@ def transkribieren(quelle, modell_name, sprache="de", orion_an=True,
 
     vorspann = orion.vorspann() if orion_an else None
 
-    segmente_roh, info = modell.transcribe(
-        quelle,
-        language=None if sprache == "auto" else sprache,
-        initial_prompt=vorspann,
-        beam_size=5,
-        vad_filter=True,                 # schneidet Stille automatisch weg
-        vad_parameters={"min_silence_duration_ms": 500},
-        condition_on_previous_text=False,  # verhindert Endlosschleifen im Text
-        temperature=[0.0, 0.2, 0.4],
-    )
+    gesamt = len(quelle) / ZIEL_RATE
+    stellen = sprechstellen(quelle, empfindlichkeit)
+    bloecke = _bloecke_bilden(stellen)
+
+    if melden:
+        melden("%d Sprechstellen, daraus %d Bloecke."
+               % (len(stellen), len(bloecke)))
 
     segmente = []
-    for seg in segmente_roh:              # das ist ein Generator, laeuft hier los
-        text = (seg.text or "").strip()
-        if not text:
-            continue
-        segmente.append({
-            "start": float(seg.start) + zeit_versatz,
-            "ende": float(seg.end) + zeit_versatz,
-            "text": text,
-        })
-        if fortschritt:
-            fortschritt(float(seg.end))
+    letzte_info = None
+    gescheitert = 0
 
-    return segmente, info
+    for nummer, (von, bis) in enumerate(bloecke, 1):
+        stueck = quelle[int(von * ZIEL_RATE):int(bis * ZIEL_RATE)]
+        if len(stueck) < ZIEL_RATE * 0.2:
+            continue
+
+        try:
+            roh, info = modell.transcribe(
+                stueck,
+                language=None if sprache == "auto" else sprache,
+                initial_prompt=vorspann,
+                beam_size=5,
+                vad_filter=False,          # die Stellen stehen schon fest
+                condition_on_previous_text=False,
+                temperature=[0.0, 0.2, 0.4, 0.6],
+            )
+            letzte_info = info
+
+            for seg in roh:                # Generator, laeuft hier los
+                text = (seg.text or "").strip()
+                if not text:
+                    continue
+                segmente.append({
+                    "start": float(seg.start) + von + zeit_versatz,
+                    "ende": float(seg.end) + von + zeit_versatz,
+                    "text": text,
+                })
+
+        except Exception as fehler:
+            # Ein kaputter Block darf nie den Rest der Aufnahme kosten.
+            gescheitert += 1
+            if melden:
+                melden("Block %d (%.0f-%.0f s) uebersprungen: %s"
+                       % (nummer, von, bis, str(fehler)[:80]))
+
+        if fortschritt:
+            fortschritt(bis)
+
+    if gescheitert and melden:
+        melden("%d von %d Bloecken sind ausgefallen." % (gescheitert, len(bloecke)))
+
+    segmente.sort(key=lambda s: s["start"])
+
+    class _Info:
+        duration = gesamt
+        language = getattr(letzte_info, "language", sprache)
+        language_probability = getattr(letzte_info, "language_probability", 0.0)
+
+    return segmente, _Info()
 
 
 def nachbearbeiten(segmente, orion_an=True):

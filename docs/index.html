@@ -47,7 +47,13 @@
         <button id="knopfStart" class="knopf haupt">Aufnahme starten</button>
         <button id="knopfPause" class="knopf" disabled>Pause</button>
         <button id="knopfStopp" class="knopf gefahr" disabled>Stoppen</button>
+        <button id="knopfTon" class="knopf still" hidden>Tonaufnahme laden</button>
       </div>
+      <p class="hinweis klein">
+        Der Ton wird nebenher als Datei mitgeschnitten. Nach dem Stoppen
+        kannst du ihn herunterladen und in die Laptop-Fassung geben, dort
+        werden dann auch die Stimmen getrennt.
+      </p>
     </div>
   </section>
 
@@ -102,16 +108,37 @@
         <li><strong>Das Fenster muss offen und sichtbar bleiben.</strong>
             Legst du das Handy weg oder wechselst den Reiter, pausiert der
             Browser die Erkennung.</li>
-        <li><strong>Audiodateien</strong> kann diese Seite nicht verarbeiten.
-            Dafuer gibt es die Laptop-Fassung.</li>
         <li><strong>Es braucht Internet</strong> und ein Mikrofon, dem du den
             Zugriff erlaubst.</li>
       </ul>
 
+      <h2>Was hier nicht geht</h2>
+      <p class="hinweis">
+        Die Spracherkennung des Browsers gibt nur fertigen Text heraus, den
+        Ton selbst ruecken sie nicht heraus. Deshalb ist auf dieser Seite
+        nicht moeglich:
+      </p>
+      <ul class="liste">
+        <li><strong>Wer spricht gerade.</strong> Person 1, Person 2 und so
+            weiter kann nur die Laptop-Fassung.</li>
+        <li><strong>Musik, Hund, Applaus erkennen.</strong> Ebenfalls nur am
+            Laptop.</li>
+        <li><strong>Saetze antippen und anhoeren.</strong> Auch das braucht
+            die Tonspur.</li>
+        <li><strong>Audiodateien verarbeiten.</strong></li>
+      </ul>
+      <p class="hinweis">
+        Als Bruecke schneidet diese Seite den Ton nebenher als Datei mit.
+        Nach dem Stoppen auf <em>Tonaufnahme laden</em> druecken und die
+        Datei in die Laptop-Fassung ziehen, dort bekommst du dann Personen,
+        Geraeusche und das Anhoeren dazu.
+      </p>
+
       <h2>Die Fassung fuer den Laptop</h2>
       <p class="hinweis">
-        Laeuft komplett offline, nimmt auch im Hintergrund auf, verarbeitet
-        Audiodateien jeder Laenge und kann den PC-Ton mitschneiden.
+        Laeuft komplett offline, trennt die Stimmen, erkennt Musik und
+        Geraeusche, nimmt im Hintergrund auf, verarbeitet Audiodateien jeder
+        Laenge und kann den PC-Ton mitschneiden.
       </p>
       <p>
         <a class="knopf" href="https://github.com/Harryclaude-hub/transkript"

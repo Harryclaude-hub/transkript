@@ -28,12 +28,21 @@ mitschneiden.
 
 | | Im Browser | Am Laptop |
 |---|---|---|
-| Installation | keine | einmalig, 5 bis 15 min |
+| Installation | keine | einmalig, 10 bis 25 min |
 | Erkennung läuft | bei Google | auf deinem Rechner |
+| **Wer spricht (Person 1, 2, 3 …)** | nein | **ja** |
+| **Musik, Hund, Applaus erkennen** | nein | **ja** |
+| **Satz antippen und anhören** | nein | **ja** |
+| **Nach Personen gefiltert laden** | nein | **ja** |
 | Audiodateien | nein | ja, beliebig lang |
 | Im Hintergrund | nein, Fenster muss offen bleiben | ja |
 | PC-Ton mitschneiden | nein | ja |
 | Orion-Funktion | Korrektur danach | Vorspann **und** Korrektur |
+
+Der Grund für die Lücken links: die Spracherkennung des Browsers liefert
+nur fertigen Text, sie gibt die Tonspur nicht heraus. Ohne Ton keine
+Stimmentrennung und kein Abspielen. Die Browser-Fassung schneidet den Ton
+deshalb nebenher als Datei mit, die man in die Laptop-Fassung geben kann.
 
 ---
 
@@ -43,10 +52,38 @@ mitschneiden.
 |---|---|
 | **Live-Mitschrift** | Läuft im Hintergrund weiter, auch wenn der Browser zu ist |
 | **Audiodateien** | Kurz oder stundenlang, MP3 / WAV / M4A / MP4 / OGG / OPUS / FLAC |
+| **Wer spricht** | Stimmen werden getrennt und wiedererkannt, beliebig viele Personen |
+| **Was sonst zu hören ist** | Musik, Hund, Applaus, Klingeln … als eigene Zeile |
+| **Empfindlichkeit** | Fünf Stufen, von „nur laute Stimmen" bis „auch Gemurmel" |
+| **Satz antippen** | Spielt genau diesen Satz ab, mit Sekundenangabe |
+| **Gefiltert speichern** | Nur ausgewählte Personen ins PDF |
+| **Ablage** | Transkripte speichern, später wieder öffnen und anhören |
 | **Mikrofon oder PC-Ton** | Raumgespräch oder das, was aus den Lautsprechern kommt |
-| **Ausgabe** | PDF, Word und Text, mit Absätzen nach Sprechpausen |
+| **Ausgabe** | PDF, Word und Text, Absatz je Sprecherwechsel |
 | **Vom Handy** | Bedienbar im Browser über das gleiche WLAN |
 | **Orion-Funktion** | Abschaltbare Fachwort-Schicht, siehe unten |
+
+### Stimmen und Geräusche
+
+Läuft über [sherpa-onnx](https://github.com/k2-fsa/sherpa-onnx): pyannote
+für die Sprecher-Segmentierung, CAM++ für den Stimm-Fingerabdruck, CED für
+die Geräusche. Alles ONNX, kein PyTorch, alles lokal.
+
+Gemessen: zwei Sprecher in 10,6-facher Echtzeit erkannt, vier Sprecher in
+6,7-facher. Die Stimmentrennung ist deutlich schneller als die
+Texterkennung und fällt zeitlich kaum ins Gewicht.
+
+### Warum blockweise erkannt wird
+
+Wird eine Tonspur am Stück durch die Spracherkennung geschickt, reicht ein
+einziger Aussetzer, damit der **komplette Rest fehlt**. Das passiert zum
+Beispiel, wenn zwischendrin Musik läuft oder die Sprache wechselt.
+Nachgemessen: bei „Deutsch, Musik, Englisch" fiel der gesamte englische
+Teil weg.
+
+`kern/motor.py` zerlegt die Aufnahme deshalb anhand der erkannten
+Sprechstellen in Blöcke und erkennt jeden einzeln. Ein kaputter Block
+kostet dann nur sich selbst.
 
 ---
 

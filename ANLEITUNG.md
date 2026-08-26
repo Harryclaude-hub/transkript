@@ -1,135 +1,201 @@
 # Transkript
 
-Ein schlichtes Mitschrift-Programm. Es hoert zu, schreibt mit und spuckt
-das Ergebnis als PDF, Word-Datei oder Text aus.
+Ein Mitschrift-Programm. Es hört zu, schreibt mit, erkennt **wer** spricht
+und **was** sonst zu hören ist, und gibt das Ergebnis als PDF, Word-Datei
+oder Text aus.
 
-Alles laeuft auf deinem Laptop. Kein Konto, keine Cloud, keine laufenden
-Kosten. Kein Ton verlaesst den Rechner.
+Alles läuft auf deinem Laptop. Kein Konto, keine Cloud, keine laufenden
+Kosten. Kein Ton verlässt den Rechner.
 
 ---
 
 ## Starten
 
-1. **Einmalig:** `installieren.bat` doppelklicken. Dauert 5 bis 15 Minuten.
+1. **Einmalig:** `installieren.bat` doppelklicken. Dauert 10 bis 25 Minuten.
 2. **Ab dann immer:** `START.bat` doppelklicken.
 
-Es geht ein schwarzes Fenster auf und der Browser oeffnet sich.
-**Das schwarze Fenster muss offen bleiben.** Es ist das Programm selbst.
-Der Browser ist nur die Fernbedienung.
+Das schwarze Fenster ist das Programm und muss offen bleiben. Der Browser
+ist nur die Fernbedienung.
+
+Beim Start steht im Fenster, ob alles bereit ist:
+
+```
+Stimmenerkennung  :  bereit
+Tonerkennung      :  bereit
+```
+
+Steht dort `Modelle fehlen`, einmal ausführen:
+
+```bash
+python C:\Users\Home\transkript\modelle_holen.py
+```
 
 ---
 
-## Die vier Reiter
+## Die fünf Reiter
 
 ### Live
 
-Aufnahmequelle waehlen, Titel eintippen, **Aufnahme starten**.
+Aufnahmequelle wählen, Titel eintippen, **Aufnahme starten**.
 
-Der Text erscheint blockweise, etwa alle 25 bis 30 Sekunden. Ein kleiner
-Rueckstand ist normal, das Programm rechnet dem Ton hinterher.
+Der Text erscheint blockweise. Du kannst den Browser zuklappen und
+weiterarbeiten, die Aufnahme läuft im Hintergrund weiter.
 
-Du kannst den Browser zuklappen, ein anderes Programm benutzen oder den
-Laptop weiterverwenden. **Die Aufnahme laeuft im Hintergrund weiter**,
-solange das schwarze Fenster offen ist.
+Beim **Stoppen** geht das Programm die Tonspur noch einmal durch und
+trennt die Stimmen. Das dauert einen Moment, dann stehen die Personen da.
 
-Bei **Aufnahmequelle** stehen zwei Sorten:
-
-| Sorte | Was es aufnimmt |
+| Aufnahmequelle | nimmt auf |
 |---|---|
-| Mikrofonarray ... | Was im Raum gesprochen wird |
-| **PC-Ton: Stereomix ...** | Was aus deinen Lautsprechern kommt |
+| Mikrofonarray ... | was im Raum gesprochen wird |
+| **PC-Ton: Stereomix ...** | was aus deinen Lautsprechern kommt |
 
-PC-Ton ist der richtige Weg, wenn du ein Video, eine Sprachnachricht oder
-einen Anruf mitschreiben willst, der auf dem Laptop laeuft.
-
-> Falls PC-Ton nicht in der Liste steht: Rechtsklick auf das
-> Lautsprecher-Symbol unten rechts, `Soundeinstellungen`, ganz nach unten
-> zu `Weitere Soundeinstellungen`, Reiter `Aufnahme`, Rechtsklick ins
-> leere Feld, `Deaktivierte Geraete anzeigen`, dann `Stereomix` aktivieren.
+> Fehlt PC-Ton: Rechtsklick auf das Lautsprecher-Symbol, `Soundeinstellungen`,
+> `Weitere Soundeinstellungen`, Reiter `Aufnahme`, Rechtsklick ins leere Feld,
+> `Deaktivierte Geräte anzeigen`, dann `Stereomix` aktivieren.
 
 ### Datei
 
-Audiodatei ins Feld ziehen, fertig. Kurz oder stundenlang, beides geht.
-Du kannst mehrere Dateien nacheinander ablegen, sie werden der Reihe nach
-abgearbeitet.
+Audiodatei hineinziehen. Kurz oder stundenlang. Personen und Geräusche
+werden gleich mit erkannt.
 
-Funktioniert direkt: **MP3, WAV, OGG, OPUS, FLAC, M4A, MP4, AAC** und mehr.
-WhatsApp-Sprachnachrichten und Handy-Aufnahmen laufen damit.
+Funktioniert: **MP3, WAV, OGG, OPUS, FLAC, M4A, MP4, AAC** und mehr.
+
+### Stimmen
+
+Hier stellst du ein, wie genau hingehört wird.
+
+**Empfindlichkeit 1 bis 5.** Das ist der wichtigste Regler.
+
+| Stufe | wofür |
+|---|---|
+| 1 bis 2 | eine Person, ruhiger Raum, klare Stimme |
+| 3 | normales Gespräch |
+| **4** | **Standard.** Mehrere Personen, auch mal leiser |
+| 5 | Gemurmel, Zwischenrufe, jemand weiter weg |
+
+Hoch heißt: es geht nichts verloren. Dafür landet auch mal ein Husten
+oder ein Rascheln im Text.
+
+**Anzahl Personen.** Normalerweise auf `selbst herausfinden` lassen.
+Wenn du sicher weißt, dass genau drei Leute reden, stell es fest ein,
+das wird dann genauer.
+
+**Wie schnell zwei Stimmen als verschiedene Personen gelten.** Werden
+zwei ähnliche Stimmen zusammengeworfen, den Regler nach links. Wird
+eine Person in zwei aufgeteilt, nach rechts.
+
+**Geräusche erkennen.** Trägt in den Sprechpausen ein, was sonst zu hören
+war: `[Musik]`, `[Hund]`, `[Applaus]`, `[Telefonklingeln]` und so weiter.
+
+**Musik nicht eintragen.** Wenn dauernd Hintergrundmusik läuft und du
+nicht alle zwei Minuten `[Musik]` im Text haben willst.
 
 ### Orion
 
-Der Reiter fuer die Fachsprache. Siehe naechster Abschnitt.
+Die Fachwort-Schicht und die Erkennungs-Einstellungen. Siehe unten.
 
 ### Ablage
 
-Alle fertigen Dateien. `Ordner oeffnen` springt in den Windows-Ordner.
+Gespeicherte Transkripte und heruntergeladene Dateien.
+
+**Aktuelles Transkript speichern** legt es mit Ton, Personen und Namen ab.
+Später anklicken und es ist wieder da, samt Anhören.
+
+**Neues Transkript** fängt frisch an, ohne das alte zu verlieren.
+
+---
+
+## Personen
+
+Sind die Stimmen getrennt, steht über dem Transkript eine Leiste:
+
+```
+● Person 1  02:14      ● Person 2  01:37      ● Person 3  00:48
+```
+
+**Auf den Namen tippen** nimmt die Person beim Herunterladen mit oder
+lässt sie weg. Ausgegraut heißt: kommt nicht mit. So lädst du ein
+Transkript herunter, in dem nur Person 1 und 2 stehen.
+
+**Auf den Stift tippen** benennt sie um. Aus `Person 2` wird `Sascha`.
+Der Name steht dann überall, auch im PDF.
+
+Die Anzahl ist nicht begrenzt. Reden zehn Leute, kommen zehn Personen
+heraus.
+
+---
+
+## Sätze anhören
+
+Jede Zeile im Transkript zeigt links den Sprecher, die Zeit und **wie
+lange der Satz gedauert hat**:
+
+```
+Karam   00:14   7.6 s
+Guten Morgen zusammen, ich habe mir die Quoten angeschaut.
+```
+
+**Auf die Zeile tippen spielt genau diesen Satz ab.** Nur diesen, danach
+hört es von selbst auf. Nochmal tippen hält an.
+
+So kannst du vor dem Herunterladen nachhören, ob wirklich das dasteht,
+was gesagt wurde.
 
 ---
 
 ## Die Orion-Funktion
 
-Der Schalter oben rechts. **An** heisst: das Programm kennt die Fachsprache
-rund um Sportwetten, Wettboersen und Quotenrechnung. **Aus** heisst: ganz
-normale Transkription, ohne jeden Fachwort-Einfluss.
+Der Schalter oben rechts. **An** heißt: das Programm kennt die Fachsprache
+rund um Sportwetten, Wettbörsen und Quotenrechnung. **Aus** heißt: ganz
+normale Transkription.
 
-Der Unterschied ist kein Kleinkram. Derselbe Satz, gemessen:
+Gemessener Unterschied am selben Satz:
 
-| | Orion **AUS** | Orion **AN** |
-|---|---|---|
-| | Poli**market** | Poly**market** |
-| | **Sourbet** | **Surebet** |
-| | Ge**bohren** | Ge**buehren** |
+| Orion **AUS** | Orion **AN** |
+|---|---|
+| Poli**market** | Poly**market** |
+| **Sourbet** | **Surebet** |
+| Ge**bohren** | Ge**bühren** |
 
-Die Funktion arbeitet in zwei Stufen:
+Zwei Stufen:
 
-1. **Vorher:** Die wichtigsten Fachbegriffe werden der Erkennung
-   mitgegeben. Sie hoert dann eher "Surebet" als "sicher Bett".
-2. **Nachher:** Was trotzdem falsch ankam, wird ueber die Korrekturliste
-   geradegezogen.
+1. **Vorher:** die wichtigsten Begriffe gehen in die Erkennung.
+2. **Nachher:** was trotzdem falsch ankam, wird geradegezogen.
 
-### Eigene Begriffe ergaenzen
+### Eigene Begriffe
 
-Im Reiter **Orion** stehen zwei Felder:
-
-**Fachbegriffe** ist eine schlichte Liste, eine Zeile pro Begriff.
-Je weiter oben, desto staerker zieht der Begriff bei der Erkennung.
-
-**Korrekturen** hat die Form `falsch gehoert = richtig`:
+Im Reiter **Orion**. `Fachbegriffe` ist eine Liste, eine Zeile pro Begriff.
+`Korrekturen` hat die Form `falsch gehört = richtig`:
 
 ```
 schure bet = Surebet
 poly market = Polymarket
 ```
 
-Gross- und Kleinschreibung ist beim Suchen egal. Bindestriche und
-Leerzeichen auch: `bet fair` findet auch `Bet-Fair` und `BetFair`.
+Groß- und Kleinschreibung ist egal, Bindestriche auch: `bet fair` findet
+auch `Bet-Fair` und `BetFair`.
 
-Danach auf **Speichern und neu laden** druecken. Sofort wirksam, ohne
-Neustart.
+Danach **Speichern und neu laden**. Sofort wirksam.
 
-Die Listen liegen auch als normale Textdateien in `begriffe\`, falls du
-sie lieber im Editor bearbeitest.
+Für ein anderes Fachgebiet einfach die Listen austauschen. Am Programm
+muss dafür nichts geändert werden.
 
-### Was Orion absichtlich NICHT tut
+### Was Orion absichtlich nicht tut
 
-Gebeugte Formen bleiben unangetastet. Aus "Gebuehren" wird nie "Gebuehr",
-aus "Quoten" nie "Quote". Ein korrekter Text darf durch die Korrektur
+Gebeugte Formen bleiben unangetastet. Aus „Gebühren" wird nie „Gebühr",
+aus „Quoten" nie „Quote". Ein korrekter Text darf durch die Korrektur
 niemals schlechter werden.
 
 ---
 
-## Speichern
+## Herunterladen
 
-Unter dem Transkript sitzen die Knoepfe: **Als PDF**, **Als Word**,
-**Als Text**. Die Datei wird geschrieben und gleich heruntergeladen.
+**Als PDF**, **Als Word**, **Als Text**. Immer mit Sprecher-Namen und
+echten Absätzen. Bei jedem Sprecherwechsel beginnt ein neuer Absatz.
 
-Alle drei Formate haben echte Absaetze. Das Programm bricht dort um, wo
-im Gespraech eine Pause war, nicht stur nach Zeichenzahl.
+Vorher in der Personen-Leiste auswählen, wer mitkommt.
 
-Oben im Dokument steht eine Kopfzeile mit Datum, Laenge, Wortzahl und ob
-Orion an war.
-
-Zeitstempel kannst du im Reiter **Orion** unter Einstellungen zuschalten.
+Zeitstempel zuschaltbar im Reiter **Orion**.
 
 ---
 
@@ -142,11 +208,8 @@ Auf diesem Laptop :  http://localhost:7345
 Vom Handy aus     :  http://192.168.x.x:7345
 ```
 
-Die zweite Adresse im Handy-Browser eingeben. Handy und Laptop muessen im
-gleichen WLAN sein. Dann kannst du vom Sofa aus die Aufnahme starten und
-stoppen, Dateien hochladen und das PDF aufs Handy laden.
-
-Die Erkennung passiert immer auf dem Laptop, nie auf dem Handy.
+Zweite Adresse im Handy-Browser, gleiches WLAN. Aufnahme starten, Sätze
+anhören, PDF aufs Handy laden. Gerechnet wird immer auf dem Laptop.
 
 ---
 
@@ -154,18 +217,32 @@ Die Erkennung passiert immer auf dem Laptop, nie auf dem Handy.
 
 Gemessen auf diesem Laptop (i5-10210U, keine Grafikkarte):
 
-| Modell | 1 Stunde Ton braucht | wofuer |
-|---|---|---|
-| `small` | ca. **36 Minuten** | Live, Standard |
-| `medium` | ca. **93 Minuten** | Dateien, Standard |
-| `large-v3-turbo` | sehr lang | nur wenn es drauf ankommt |
+| Schritt | 1 Stunde Ton |
+|---|---|
+| Text mit `small` | ca. 40 min |
+| Text mit `medium` | ca. 95 min |
+| Stimmen trennen | ca. **8 min** |
+| Geräusche erkennen | ca. 3 min |
 
-Umstellen im Reiter **Orion** unter Einstellungen. Wenn dir eine lange
-Datei zu lange dauert: `medium` auf `small` stellen, das ist rund
-zweieinhalbmal schneller.
+Die Stimmentrennung ist der schnellste Teil, die kostet kaum etwas.
 
-Das Programm rechnet auf allen 8 Kernen. Es laeuft weiter, auch wenn du
-nebenher arbeitest, dann halt etwas langsamer.
+Zu langsam? Im Reiter **Orion** von `medium` auf `small` stellen.
+
+---
+
+## Die Fassung im Browser
+
+Es gibt zusätzlich eine abgespeckte Fassung ohne Installation:
+
+**https://harryclaude-hub.github.io/transkript/**
+
+Die kann Aufnahme und Herunterladen, aber **keine Stimmenerkennung, keine
+Geräusche und kein Anhören**. Grund: sie benutzt die Spracherkennung des
+Browsers, und die gibt nur fertigen Text heraus, nie die Tonspur.
+
+Sie schneidet den Ton aber nebenher als Datei mit. Nach dem Stoppen auf
+**Tonaufnahme laden** drücken und die Datei hier im Reiter **Datei**
+hineinziehen, dann bekommst du Personen und Geräusche nachträglich dazu.
 
 ---
 
@@ -175,52 +252,64 @@ nebenher arbeitest, dann halt etwas langsamer.
 C:\Users\Home\transkript\
    START.bat            <- damit starten
    installieren.bat     <- einmalig
+   modelle_holen.py     <- Modelle für Stimmen und Töne
    ergebnisse\          <- fertige PDFs, Word- und Textdateien
-   aufnahmen\           <- roher Ton, auch von den Live-Aufnahmen
-   begriffe\            <- die Orion-Listen zum Selbstbearbeiten
-   modelle\             <- die Spracherkennung, rund 3,4 GB
+   aufnahmen\           <- roher Ton
+   transkripte\         <- die Ablage
+   begriffe\            <- die Orion-Listen
+   modelle\             <- Spracherkennung (3,4 GB) + Stimmen (0,45 GB)
    weboberflaeche\
-      stil.css          <- reines Design, darf geloescht werden
+      stil.css          <- reines Design, darf gelöscht werden
       logik.js          <- Funktion
-   kern\                <- Funktion
+   kern\
+      motor.py          <- Spracherkennung
+      stimmen.py        <- wer spricht, was ist zu hören
+      live.py           <- Aufnahme im Hintergrund
+      orion.py          <- Fachbegriffe
+      absaetze.py       <- Segmente zu Absätzen
+      ausgabe.py        <- PDF / Word / Text
+      ablage.py         <- gespeicherte Transkripte
 ```
 
-Jede Live-Aufnahme wird zusaetzlich als WAV in `aufnahmen\` gesichert.
-Falls dir ein Transkript zu ungenau war, kannst du diese Datei spaeter im
-Reiter **Datei** noch einmal mit dem genaueren Modell durchlaufen lassen.
+Jede Live-Aufnahme wird als WAV in `aufnahmen\` gesichert. War ein
+Transkript zu ungenau, lass die Datei im Reiter **Datei** noch einmal mit
+dem genaueren Modell durchlaufen.
 
-**Design und Funktion sind getrennt.** `stil.css` enthaelt kein einziges
-Stueck Ablaufsteuerung. Du kannst die Datei loeschen oder komplett
-umschreiben, das Programm rechnet unveraendert weiter.
+**Design und Funktion sind getrennt.** `stil.css` enthält kein Stück
+Ablaufsteuerung. Die Datei darf gelöscht werden, das Programm rechnet
+unverändert weiter.
 
 ---
 
 ## Wenn etwas klemmt
 
-**"Es fehlen noch Programmteile"**
+**„Es fehlen noch Programmteile"**
 `installieren.bat` doppelklicken.
 
-**Die Seite laedt nicht / "Keine Verbindung zum Programm"**
-Das schwarze Fenster wurde geschlossen. `START.bat` neu starten.
+**Stimmenerkennung sagt „Modelle fehlen"**
+`python modelle_holen.py` ausführen.
 
-**Kein Mikrofon in der Liste**
-Windows-Einstellungen, `Datenschutz und Sicherheit`, `Mikrofon`, dort den
-Zugriff fuer Desktop-Apps erlauben.
+**Alle reden, aber es kommt nur eine Person heraus**
+Im Reiter **Stimmen** den Regler *Wie schnell zwei Stimmen als
+verschiedene Personen gelten* nach links. Oder die Anzahl fest einstellen.
 
-**Die Erkennung startet nicht, Meldung ueber blockierte Dateien**
-Auf diesem Laptop ist **Smart App Control** eingeschaltet. Diese
-Windows-Schutzfunktion blockiert manche Programmteile. Deshalb ist in
-`installieren.bat` die Zeile `"av==13.1.0"` festgenagelt. Neuere Fassungen
-werden blockiert. Diese Zeile bitte nicht auf eine neuere Version aendern.
+**Eine Person wird in zwei aufgeteilt**
+Denselben Regler nach rechts.
 
-Falls es doch einmal klemmt: das Programm hat einen zweiten Weg eingebaut
-und liest MP3, WAV, OGG und FLAC dann trotzdem. Nur M4A und MP4 brauchen
-zwingend den ersten Weg.
+**Leise Stimmen fehlen im Text**
+Empfindlichkeit auf 5.
 
-**Smart App Control abschalten ist keine Loesung, die ich empfehle:**
-Das laesst sich ohne Windows-Neuinstallation nicht rueckgaengig machen.
-Wir brauchen es nicht, das Programm laeuft auch so.
+**Zu viel Müll im Text (Husten, Rascheln)**
+Empfindlichkeit auf 3.
 
-**Aufnahme laeuft, aber der Pegelbalken bleibt leer**
-Falsche Quelle gewaehlt. Bei PC-Ton muss auch wirklich Ton aus den
-Lautsprechern kommen, bei Stummschaltung nimmt er nichts auf.
+**Die Erkennung startet nicht, Meldung über blockierte Dateien**
+Auf diesem Laptop ist **Smart App Control** an. Deshalb ist in
+`installieren.bat` `av==13.1.0` festgenagelt. Diese Zeile bitte nicht auf
+eine neuere Version ändern.
+
+Smart App Control abzuschalten empfehle ich nicht, das lässt sich ohne
+Windows-Neuinstallation nicht rückgängig machen.
+
+**Ein Satz lässt sich nicht anhören**
+Zu dem Transkript gibt es keine Tondatei mehr. Prüfen, ob sie noch in
+`aufnahmen\` liegt.

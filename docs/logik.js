@@ -32,6 +32,21 @@ let letzterAbschluss = 0;
 let uhrTakt = null;
 let wachhalter = null;
 
+/* --- Am Leben halten ---------------------------------------------
+   Die Spracherkennung des Browsers hoert von selbst wieder auf, oft
+   schon nach dem ersten Satz oder nach kurzer Stille. Ohne das Folgende
+   nimmt die Seite dann nichts mehr auf, obwohl "laeuft" dasteht.
+   Deshalb: bei jedem Ende sofort neu anwerfen, dazu ein Waechter, der
+   nachschaut, ob ueberhaupt noch etwas passiert.               ------ */
+let neustartUhr = null;
+let waechterTakt = null;
+let letzteAktivitaet = 0;
+let neustarts = 0;
+
+const WAECHTER_GEDULD = 14000;   // so lange darf gar nichts passieren
+const AUFNAHME_STROM = { strom: null, aufnehmer: null, stuecke: [], art: '' };
+let tonAdresse = '';
+
 /* --------------------------- Hilfen --------------------------- */
 
 function entschaerfe(text) {
@@ -131,6 +146,14 @@ function uhrLaufen() {
   uhrTakt = setInterval(() => {
     $('#uhr').textContent = zeit(jetzt());
     if (segmente.length) zeichnen();
+
+    // Zeigen, dass die Erkennung wirklich noch lebt.
+    if (sollLaufen && !pausiert) {
+      const still = Math.round((Date.now() - letzteAktivitaet) / 1000);
+      standAnzeigen(still > 4
+        ? `Laeuft, hoert zu (seit ${still}s still).`
+        : 'Laeuft, hoert zu.');
+    }
   }, 1000);
 }
 
@@ -182,7 +205,13 @@ function erkennungBauen() {
   e.interimResults = true;
   e.maxAlternatives = 1;
 
+  e.onstart = () => { letzteAktivitaet = Date.now(); };
+  e.onaudiostart = () => { letzteAktivitaet = Date.now(); };
+  e.onspeechstart = () => { letzteAktivitaet = Date.now(); };
+  e.onsoundstart = () => { letzteAktivitaet = Date.now(); };
+
   e.onresult = (ereignis) => {
+    letzteAktivitaet = Date.now();
     let vorlaeufig = '';
 
     for (let i = ereignis.resultIndex; i < ereignis.results.length; i++) {
@@ -233,16 +262,58 @@ function erkennungBauen() {
     }
   };
 
-  /* Der Browser beendet die Erkennung von selbst, oft nach kurzer Stille.
-     Deshalb hier sofort wieder anwerfen, solange aufgenommen werden soll. */
+  /* Der Browser beendet die Erkennung von selbst, oft schon nach dem
+     ersten Satz. Dann hier sofort wieder anwerfen. */
   e.onend = () => {
-    if (sollLaufen && !pausiert) {
-      try { erkennung.start(); }
-      catch (fehler) { setTimeout(() => { try { erkennung.start(); } catch (f) {} }, 350); }
-    }
+    if (sollLaufen && !pausiert) neuStarten(120);
   };
 
   return e;
+}
+
+
+/* Wirft die Erkennung neu an. Immer mit einem FRISCHEN Objekt: ein einmal
+   gestorbenes laesst sich in Chrome nicht zuverlaessig wiederbeleben.
+   Klappt der Start nicht, wird es mit wachsendem Abstand weiter versucht,
+   statt nach zwei Fehlschlaegen aufzugeben. */
+function neuStarten(verzoegerung) {
+  if (!sollLaufen || pausiert) return;
+
+  clearTimeout(neustartUhr);
+  neustartUhr = setTimeout(() => {
+    if (!sollLaufen || pausiert) return;
+
+    if (erkennung) {
+      erkennung.onend = null;
+      erkennung.onerror = null;
+      erkennung.onresult = null;
+      try { erkennung.abort(); } catch (fehler) { /* war schon tot */ }
+    }
+
+    try {
+      erkennung = erkennungBauen();
+      erkennung.start();
+      letzteAktivitaet = Date.now();
+      neustarts++;
+    } catch (fehler) {
+      neuStarten(Math.min(4000, Math.max(250, verzoegerung * 2)));
+    }
+  }, verzoegerung);
+}
+
+
+/* Waechter: schaut nach, ob ueberhaupt noch etwas ankommt. Passiert eine
+   ganze Weile gar nichts, wird ohne viel Federlesen neu gestartet. */
+function waechterStarten() {
+  clearInterval(waechterTakt);
+  waechterTakt = setInterval(() => {
+    if (!sollLaufen || pausiert) return;
+    if (Date.now() - letzteAktivitaet > WAECHTER_GEDULD) {
+      standAnzeigen('Erkennung war eingeschlafen, laeuft wieder.');
+      letzteAktivitaet = Date.now();
+      neuStarten(60);
+    }
+  }, 3000);
 }
 
 /* --------------------------- Bedienung --------------------------- */
@@ -266,23 +337,76 @@ async function bildschirmWachHalten(an) {
   } catch (e) { /* nicht ueberall vorhanden, kein Problem */ }
 }
 
-$('#knopfStart').addEventListener('click', () => {
-  if (!erkennung) { erkennung = erkennungBauen(); }
-  if (!erkennung) { melde('Dieser Browser kann keine Spracherkennung.', 'fehler'); return; }
+/* Nimmt den Ton nebenher als Datei mit. Die Spracherkennung des Browsers
+   rueckt den Ton nicht heraus, deshalb ein zweiter, eigener Mitschnitt.
+   Damit kannst du die Aufnahme spaeter in die Laptop-Fassung geben und
+   dort die Stimmen trennen lassen. */
+async function tonMitschnittStarten() {
+  if (!navigator.mediaDevices || !window.MediaRecorder) return;
+  try {
+    AUFNAHME_STROM.strom = await navigator.mediaDevices.getUserMedia({ audio: true });
+    AUFNAHME_STROM.stuecke = [];
+
+    const arten = ['audio/webm;codecs=opus', 'audio/webm', 'audio/mp4', ''];
+    const art = arten.find((a) => !a || MediaRecorder.isTypeSupported(a));
+    AUFNAHME_STROM.art = art || '';
+
+    const aufnehmer = new MediaRecorder(AUFNAHME_STROM.strom,
+      art ? { mimeType: art } : undefined);
+    aufnehmer.ondataavailable = (e) => {
+      if (e.data && e.data.size) AUFNAHME_STROM.stuecke.push(e.data);
+    };
+    aufnehmer.start(4000);
+    AUFNAHME_STROM.aufnehmer = aufnehmer;
+  } catch (fehler) {
+    // Ohne Mitschnitt laeuft die Erkennung trotzdem weiter.
+    AUFNAHME_STROM.aufnehmer = null;
+  }
+}
+
+function tonMitschnittBeenden() {
+  const a = AUFNAHME_STROM.aufnehmer;
+  if (!a) return;
+
+  a.onstop = () => {
+    if (!AUFNAHME_STROM.stuecke.length) return;
+    const art = AUFNAHME_STROM.art || 'audio/webm';
+    const blob = new Blob(AUFNAHME_STROM.stuecke, { type: art });
+    if (tonAdresse) URL.revokeObjectURL(tonAdresse);
+    tonAdresse = URL.createObjectURL(blob);
+    $('#knopfTon').hidden = false;
+    $('#knopfTon').dataset.endung = art.includes('mp4') ? 'm4a' : 'webm';
+  };
+
+  try { a.stop(); } catch (fehler) { /* schon aus */ }
+  if (AUFNAHME_STROM.strom) {
+    AUFNAHME_STROM.strom.getTracks().forEach((spur) => spur.stop());
+  }
+  AUFNAHME_STROM.aufnehmer = null;
+}
+
+$('#knopfStart').addEventListener('click', async () => {
+  const Bau = window.SpeechRecognition || window.webkitSpeechRecognition;
+  if (!Bau) { melde('Dieser Browser kann keine Spracherkennung.', 'fehler'); return; }
 
   sollLaufen = true;
   pausiert = false;
   startZeit = Date.now();
   sprechbeginn = null;
+  letzteAktivitaet = Date.now();
+  neustarts = 0;
 
-  try { erkennung.start(); }
-  catch (fehler) { /* laeuft schon */ }
+  await tonMitschnittStarten();
 
+  erkennung = erkennungBauen();
+  try { erkennung.start(); } catch (fehler) { neuStarten(300); }
+
+  waechterStarten();
   knoepfeSetzen();
   uhrLaufen();
   bildschirmWachHalten(true);
   standAnzeigen('Laeuft. Sprich einfach los.');
-  melde('Aufnahme laeuft. Fenster offen lassen.');
+  melde('Aufnahme laeuft. Fenster offen und sichtbar lassen.');
 });
 
 $('#knopfPause').addEventListener('click', () => {
@@ -291,12 +415,20 @@ $('#knopfPause').addEventListener('click', () => {
   if (!pausiert) {
     pausiert = true;
     verstricheneZeit += (Date.now() - startZeit) / 1000;
+    clearTimeout(neustartUhr);
     try { erkennung.stop(); } catch (e) {}
+    if (AUFNAHME_STROM.aufnehmer) {
+      try { AUFNAHME_STROM.aufnehmer.pause(); } catch (e) {}
+    }
     standAnzeigen('Pause.');
   } else {
     pausiert = false;
     startZeit = Date.now();
-    try { erkennung.start(); } catch (e) {}
+    letzteAktivitaet = Date.now();
+    if (AUFNAHME_STROM.aufnehmer) {
+      try { AUFNAHME_STROM.aufnehmer.resume(); } catch (e) {}
+    }
+    neuStarten(80);
     standAnzeigen('Laeuft weiter.');
   }
   knoepfeSetzen();
@@ -306,7 +438,14 @@ $('#knopfStopp').addEventListener('click', () => {
   if (!pausiert) verstricheneZeit += (Date.now() - startZeit) / 1000;
   sollLaufen = false;
   pausiert = false;
-  try { erkennung.stop(); } catch (e) {}
+
+  clearTimeout(neustartUhr);
+  clearInterval(waechterTakt);
+  if (erkennung) {
+    erkennung.onend = null;
+    try { erkennung.stop(); } catch (e) {}
+  }
+  tonMitschnittBeenden();
 
   clearInterval(uhrTakt);
   $('#vorlaeufig').textContent = '';
@@ -316,6 +455,17 @@ $('#knopfStopp').addEventListener('click', () => {
   merken();
   zeichnen();
   melde('Aufnahme beendet. Jetzt herunterladen nicht vergessen.');
+});
+
+$('#knopfTon').addEventListener('click', () => {
+  if (!tonAdresse) return;
+  const link = document.createElement('a');
+  link.href = tonAdresse;
+  link.download = dateiname($('#knopfTon').dataset.endung || 'webm');
+  document.body.appendChild(link);
+  link.click();
+  link.remove();
+  melde('Tonaufnahme heruntergeladen. Die kannst du in die Laptop-Fassung geben.');
 });
 
 /* --------------------------- Reiter --------------------------- */

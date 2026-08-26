@@ -3,12 +3,17 @@
    Diese Datei steuert, WAS passiert. Wie es aussieht, steht in stil.css.
    ------------------------------------------------------------------ */
 
-const $ = (auswahl) => document.querySelector(auswahl);
-const $$ = (auswahl) => Array.from(document.querySelectorAll(auswahl));
+const $ = (a) => document.querySelector(a);
+const $$ = (a) => Array.from(document.querySelectorAll(a));
 
 let einstellungen = {};
 let liveLaeuft = false;
-let eingabeAktiv = false;   // damit Tippen im Textfeld nicht ueberschrieben wird
+let eingabeAktiv = false;
+let abgewaehlt = new Set();     // Personen, die NICHT mit heruntergeladen werden
+let letzteAbsaetze = [];
+let aktuellerTon = '';
+let spielStopp = null;          // Zeitpunkt, an dem das Abspielen enden soll
+let laufendeZeile = null;
 
 /* --------------------------- Hilfen --------------------------- */
 
@@ -31,7 +36,7 @@ function melde(text, art) {
   kasten.textContent = text;
   kasten.className = 'meldung sichtbar' + (art ? ' ' + art : '');
   clearTimeout(meldungsUhr);
-  meldungsUhr = setTimeout(() => { kasten.className = 'meldung'; }, 4200);
+  meldungsUhr = setTimeout(() => { kasten.className = 'meldung'; }, 4600);
 }
 
 function zeit(sekunden) {
@@ -42,6 +47,12 @@ function zeit(sekunden) {
   return h > 0 ? `${h}:${m}:${s}` : `${m}:${s}`;
 }
 
+function entschaerfe(text) {
+  const h = document.createElement('div');
+  h.textContent = text == null ? '' : String(text);
+  return h.innerHTML;
+}
+
 /* --------------------------- Reiter --------------------------- */
 
 $$('.reiterKnopf').forEach((knopf) => {
@@ -50,31 +61,55 @@ $$('.reiterKnopf').forEach((knopf) => {
     $$('.tafel').forEach((t) => t.classList.remove('aktiv'));
     knopf.classList.add('aktiv');
     $('#' + knopf.dataset.ziel).classList.add('aktiv');
-    if (knopf.dataset.ziel === 'tafelAblage') ablageLaden();
+    if (knopf.dataset.ziel === 'tafelAblage') { ablageLaden(); dateienLaden(); }
     if (knopf.dataset.ziel === 'tafelOrion') begriffeLaden();
   });
 });
 
-/* ------------------- Orion-Schalter + Einstellungen ------------------- */
+/* --------------------------- Einstellungen --------------------------- */
 
-$('#orionSchalter').addEventListener('change', async (ereignis) => {
-  const an = ereignis.target.checked;
+$('#orionSchalter').addEventListener('change', async (e) => {
+  const an = e.target.checked;
   await sende('/api/einstellungen', { orion_an: an });
   document.body.classList.toggle('orionAus', !an);
-  melde(an
-    ? 'Orion-Funktion eingeschaltet. Fachbegriffe werden beruecksichtigt.'
-    : 'Orion-Funktion ausgeschaltet. Ganz normale Transkription.');
+  melde(an ? 'Orion-Funktion eingeschaltet.' : 'Orion-Funktion ausgeschaltet.');
 });
 
-['modellLive', 'modellDatei', 'sprache', 'zeitstempel'].forEach((kennung) => {
-  $('#' + kennung).addEventListener('change', async (ereignis) => {
-    const ziel = ereignis.target;
-    const schluessel = {
-      modellLive: 'modell_live', modellDatei: 'modell_datei',
-      sprache: 'sprache', zeitstempel: 'zeitstempel',
-    }[kennung];
-    const wert = ziel.type === 'checkbox' ? ziel.checked : ziel.value;
-    await sende('/api/einstellungen', { [schluessel]: wert });
+const EINFACHE_FELDER = {
+  modellLive: 'modell_live', modellDatei: 'modell_datei',
+  sprache: 'sprache', zeitstempel: 'zeitstempel',
+  stimmenAn: 'stimmen_an', anzahlPersonen: 'anzahl_personen',
+  toeneAn: 'toene_an', musikWeglassen: 'musik_weglassen',
+};
+
+Object.keys(EINFACHE_FELDER).forEach((kennung) => {
+  $('#' + kennung).addEventListener('change', async (e) => {
+    const ziel = e.target;
+    let wert = ziel.type === 'checkbox' ? ziel.checked : ziel.value;
+    if (kennung === 'anzahlPersonen') wert = parseInt(wert, 10);
+    await sende('/api/einstellungen', { [EINFACHE_FELDER[kennung]]: wert });
+    melde('Gespeichert.');
+  });
+});
+
+const SCHIEBER = {
+  empfindlichkeit: { schluessel: 'empfindlichkeit', text: '#empfindlichkeitText',
+                     zeigen: (v) => v, zahl: (v) => parseInt(v, 10) },
+  aehnlichkeit: { schluessel: 'stimmen_aehnlichkeit', text: '#aehnlichkeitText',
+                  zeigen: (v) => Number(v).toFixed(2), zahl: (v) => parseFloat(v) },
+  tonSchwelle: { schluessel: 'ton_schwelle', text: '#tonSchwelleText',
+                 zeigen: (v) => Number(v).toFixed(2), zahl: (v) => parseFloat(v) },
+};
+
+Object.keys(SCHIEBER).forEach((kennung) => {
+  const feld = $('#' + kennung);
+  const regel = SCHIEBER[kennung];
+
+  feld.addEventListener('input', () => {
+    $(regel.text).textContent = regel.zeigen(feld.value);
+  });
+  feld.addEventListener('change', async () => {
+    await sende('/api/einstellungen', { [regel.schluessel]: regel.zahl(feld.value) });
     melde('Gespeichert.');
   });
 });
@@ -91,7 +126,6 @@ async function geraeteLaden() {
     if (daten.fehler) melde(daten.fehler, 'fehler');
     return;
   }
-
   daten.geraete.forEach((g) => {
     const eintrag = document.createElement('option');
     eintrag.value = g.id;
@@ -108,9 +142,8 @@ $('#knopfStart').addEventListener('click', async () => {
   if (!geraet) { melde('Bitte erst eine Aufnahmequelle waehlen.', 'fehler'); return; }
 
   $('#knopfStart').disabled = true;
-  const antwort = await sende('/api/live/start', {
-    geraet, titel: $('#liveTitel').value.trim(),
-  });
+  const antwort = await sende('/api/live/start',
+    { geraet, titel: $('#liveTitel').value.trim() });
 
   if (!antwort.ok) {
     $('#knopfStart').disabled = false;
@@ -122,17 +155,17 @@ $('#knopfStart').addEventListener('click', async () => {
 
 $('#knopfPause').addEventListener('click', async () => {
   const antwort = await sende('/api/live/pause');
-  if (antwort.ok) {
-    $('#knopfPause').textContent = antwort.pausiert ? 'Weiter' : 'Pause';
-  }
+  if (antwort.ok) $('#knopfPause').textContent = antwort.pausiert ? 'Weiter' : 'Pause';
 });
 
 $('#knopfStopp').addEventListener('click', async () => {
   $('#knopfStopp').disabled = true;
   melde('Wird beendet, der letzte Block wird noch erkannt ...');
   const antwort = await sende('/api/live/stopp');
-  if (!antwort.ok) melde(antwort.fehler, 'fehler');
-  else melde('Aufnahme beendet. Jetzt speichern nicht vergessen.');
+  if (!antwort.ok) { melde(antwort.fehler, 'fehler'); return; }
+  melde(antwort.sprecher_laeuft
+    ? 'Aufnahme beendet. Die Stimmen werden jetzt getrennt.'
+    : 'Aufnahme beendet.');
 });
 
 /* --------------------------- Dateien --------------------------- */
@@ -182,19 +215,210 @@ function auftraegeZeichnen(auftraege) {
         <button class="wegKnopf" data-weg="${a.id}">&times;</button>
       </div>
       <div class="auftragText">${entschaerfe(a.text)}</div>
+      <div class="balken"><div style="width:${Math.round((a.anteil || 0) * 100)}%"></div></div>
     </div>`).join('');
 
   $$('[data-weg]').forEach((knopf) => {
-    knopf.addEventListener('click', async () => {
-      await fetch('/api/auftrag/' + knopf.dataset.weg, { method: 'DELETE' });
-    });
+    knopf.addEventListener('click', () =>
+      fetch('/api/auftrag/' + knopf.dataset.weg, { method: 'DELETE' }));
   });
 }
 
-function entschaerfe(text) {
-  const hilfe = document.createElement('div');
-  hilfe.textContent = text == null ? '' : String(text);
-  return hilfe.innerHTML;
+/* --------------------------- Stimmen bestimmen --------------------------- */
+
+$('#knopfSprecher').addEventListener('click', async () => {
+  const antwort = await sende('/api/sprecher');
+  if (!antwort.ok) melde(antwort.fehler, 'fehler');
+  else melde('Die Stimmen werden getrennt. Das dauert einen Moment.');
+});
+
+async function personUmbenennen(nummer, alterName) {
+  const name = prompt(`Wie soll Person ${nummer} heissen?`, alterName || '');
+  if (name === null) return;
+  const antwort = await sende('/api/namen', { person: String(nummer), name });
+  if (antwort.ok) melde(name.trim() ? `Heisst jetzt ${name.trim()}.` : 'Name entfernt.');
+}
+
+function personenZeichnen(personen) {
+  const leiste = $('#personenLeiste');
+  const echte = personen.filter((p) => p.person > 0);
+
+  if (!echte.length) {
+    leiste.innerHTML = '';
+    $('#filterHinweis').textContent = '';
+    return;
+  }
+
+  leiste.innerHTML = echte.map((p) => {
+    const aus = abgewaehlt.has(p.person);
+    return `
+      <div class="personChip ${aus ? 'aus' : ''}" style="--farbe:${p.farbe}">
+        <button class="chipWahl" data-person="${p.person}"
+                title="Beim Herunterladen mitnehmen oder weglassen">
+          <span class="chipPunkt"></span>
+          <span class="chipName">${entschaerfe(p.name)}</span>
+          <span class="chipZahl">${zeit(p.sekunden)}</span>
+        </button>
+        <button class="chipStift" data-umbenennen="${p.person}"
+                data-name="${entschaerfe(p.name)}" title="Umbenennen">&#9998;</button>
+      </div>`;
+  }).join('');
+
+  $$('[data-person]').forEach((knopf) => {
+    knopf.addEventListener('click', () => {
+      const nummer = parseInt(knopf.dataset.person, 10);
+      if (abgewaehlt.has(nummer)) abgewaehlt.delete(nummer);
+      else abgewaehlt.add(nummer);
+      personenZeichnen(personen);
+    });
+  });
+  $$('[data-umbenennen]').forEach((knopf) => {
+    knopf.addEventListener('click', () =>
+      personUmbenennen(parseInt(knopf.dataset.umbenennen, 10), knopf.dataset.name));
+  });
+
+  $('#filterHinweis').textContent = abgewaehlt.size
+    ? 'Beim Herunterladen weggelassen: '
+      + echte.filter((p) => abgewaehlt.has(p.person)).map((p) => p.name).join(', ')
+    : '';
+}
+
+/* --------------------------- Abspielen --------------------------- */
+
+const spieler = $('#spieler');
+
+spieler.addEventListener('timeupdate', () => {
+  if (spielStopp !== null && spieler.currentTime >= spielStopp) {
+    spieler.pause();
+    spielStopp = null;
+    abspielenBeenden();
+  }
+});
+spieler.addEventListener('ended', abspielenBeenden);
+spieler.addEventListener('pause', abspielenBeenden);
+
+function abspielenBeenden() {
+  if (laufendeZeile) {
+    laufendeZeile.classList.remove('spielt');
+    laufendeZeile = null;
+  }
+}
+
+function abspielen(zeile, von, bis) {
+  if (!aktuellerTon) {
+    melde('Zu diesem Transkript ist keine Tonspur da.', 'fehler');
+    return;
+  }
+
+  // Nochmal auf dieselbe Zeile tippen heisst: anhalten.
+  if (laufendeZeile === zeile) {
+    spieler.pause();
+    spielStopp = null;
+    abspielenBeenden();
+    return;
+  }
+
+  abspielenBeenden();
+
+  const quelle = '/ton/' + encodeURIComponent(aktuellerTon);
+  if (!spieler.src.endsWith(quelle)) {
+    spieler.src = quelle;
+    spieler.load();          // ohne das holt der Browser nicht einmal die Laenge
+  }
+
+  spielStopp = bis + 0.25;
+  laufendeZeile = zeile;
+  zeile.classList.add('spielt');
+
+  const los = () => {
+    try {
+      spieler.currentTime = Math.max(0, von - 0.15);
+    } catch (fehler) { /* Datei noch nicht weit genug geladen */ }
+
+    const versuch = spieler.play();
+    if (versuch && versuch.catch) {
+      versuch.catch((fehler) => {
+        melde('Abspielen geht nicht: ' + fehler.message, 'fehler');
+        abspielenBeenden();
+      });
+    }
+  };
+
+  // readyState 1 heisst: die Laenge ist bekannt, springen ist moeglich.
+  if (spieler.readyState >= 1) los();
+  else spieler.addEventListener('loadedmetadata', los, { once: true });
+}
+
+/* --------------------------- Transkript --------------------------- */
+
+function gleich(a, b) {
+  return a.length === b.length && a.every((x, i) =>
+    x.text === b[i].text && x.person === b[i].person && x.start === b[i].start);
+}
+
+function transkriptZeichnen(t) {
+  const kasten = $('#transkript');
+  aktuellerTon = t.ton || '';
+
+  if (!t.absaetze.length) {
+    if (letzteAbsaetze.length) {
+      kasten.innerHTML = '<p class="leer">Noch nichts aufgenommen. '
+        + 'Starte oben eine Aufnahme oder lege eine Audiodatei ab.</p>';
+      letzteAbsaetze = [];
+    }
+    $('#transkriptZahlen').textContent = 'noch leer';
+    return;
+  }
+
+  // Nur neu zeichnen, wenn sich wirklich etwas geaendert hat.
+  // Sonst reisst es bei jeder Abfrage das Abspielen ab.
+  if (!gleich(t.absaetze, letzteAbsaetze)) {
+    const unten = kasten.scrollHeight - kasten.scrollTop - kasten.clientHeight < 60;
+    const namen = {};
+    t.personen.forEach((p) => { namen[p.person] = p; });
+
+    kasten.innerHTML = t.absaetze.map((a, i) => {
+      const p = namen[a.person];
+      const farbe = p ? p.farbe : '#6b7280';
+      const kopfTeile = [];
+
+      if (!a.geraeusch && a.person > 0) {
+        kopfTeile.push(`<span class="zeileName" style="color:${farbe}">`
+          + `${entschaerfe(p ? p.name : 'Person ' + a.person)}</span>`);
+      }
+      kopfTeile.push(`<span class="zeileZeit">${zeit(a.start)}</span>`);
+      kopfTeile.push(`<span class="zeileDauer">${a.dauer.toFixed(1)} s</span>`);
+
+      return `
+        <div class="absatz ${a.geraeusch ? 'geraeusch' : ''}"
+             data-von="${a.start}" data-bis="${a.ende}" tabindex="0"
+             style="--farbe:${farbe}"
+             title="Antippen zum Anhoeren">
+          <div class="zeileKopf">${kopfTeile.join('')}
+            <span class="zeileSpiel">&#9654;</span></div>
+          <p>${entschaerfe(a.text)}</p>
+        </div>`;
+    }).join('');
+
+    $$('#transkript .absatz').forEach((zeile) => {
+      const los = () => abspielen(zeile, parseFloat(zeile.dataset.von),
+                                  parseFloat(zeile.dataset.bis));
+      zeile.addEventListener('click', los);
+      zeile.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); los(); }
+      });
+    });
+
+    if (unten) kasten.scrollTop = kasten.scrollHeight;
+    letzteAbsaetze = t.absaetze;
+  }
+
+  let zeile = `${t.woerter} Woerter &middot; ${t.absaetze.length} Absaetze `
+            + `&middot; ${zeit(t.dauer)}`;
+  const echte = t.personen.filter((p) => p.person > 0).length;
+  if (echte) zeile += ` &middot; ${echte} ${echte === 1 ? 'Person' : 'Personen'}`;
+  if (t.korrekturen > 0) zeile += ` &middot; ${t.korrekturen}x Orion`;
+  $('#transkriptZahlen').innerHTML = zeile;
 }
 
 /* --------------------------- Orion-Begriffe --------------------------- */
@@ -225,15 +449,22 @@ $('#knopfBegriffeSpeichern').addEventListener('click', async () => {
   }
 });
 
-/* --------------------------- Speichern --------------------------- */
+/* --------------------------- Herunterladen --------------------------- */
 
 $$('[data-format]').forEach((knopf) => {
   knopf.addEventListener('click', async () => {
-    const format = knopf.dataset.format;
     knopf.disabled = true;
     melde('Wird geschrieben ...');
+
+    const alle = letzteAbsaetze
+      .filter((a) => !a.geraeusch && a.person > 0)
+      .map((a) => a.person);
+    const behalten = Array.from(new Set(alle)).filter((p) => !abgewaehlt.has(p));
+
     const antwort = await sende('/api/speichern', {
-      format, titel: $('#liveTitel').value.trim() || undefined,
+      format: knopf.dataset.format,
+      titel: $('#liveTitel').value.trim() || undefined,
+      personen: behalten.length ? behalten : undefined,
     });
     knopf.disabled = false;
 
@@ -246,7 +477,7 @@ $$('[data-format]').forEach((knopf) => {
     document.body.appendChild(link);
     link.click();
     link.remove();
-    ablageLaden();
+    dateienLaden();
   });
 });
 
@@ -256,29 +487,88 @@ $('#knopfKopieren').addEventListener('click', async () => {
   try {
     await navigator.clipboard.writeText(text);
     melde('In die Zwischenablage kopiert.');
-  } catch (fehler) {
-    melde('Kopieren hat der Browser blockiert.', 'fehler');
-  }
+  } catch (fehler) { melde('Kopieren hat der Browser blockiert.', 'fehler'); }
 });
 
 $('#knopfLeeren').addEventListener('click', async () => {
   if (!confirm('Transkript wirklich leeren? Ungespeichertes ist dann weg.')) return;
   await sende('/api/leeren');
+  letzteAbsaetze = [];
+  abgewaehlt.clear();
   melde('Geleert.');
 });
 
 /* --------------------------- Ablage --------------------------- */
 
+$('#knopfAblageSpeichern').addEventListener('click', async () => {
+  const antwort = await sende('/api/ablage/speichern',
+    { titel: $('#liveTitel').value.trim() || undefined });
+  if (!antwort.ok) { melde(antwort.fehler, 'fehler'); return; }
+  melde('In der Ablage gespeichert.');
+  ablageLaden();
+});
+
+$('#knopfNeu').addEventListener('click', async () => {
+  if (letzteAbsaetze.length
+      && !confirm('Neues Transkript beginnen? Ungespeichertes ist dann weg.')) return;
+  await sende('/api/neu');
+  letzteAbsaetze = [];
+  abgewaehlt.clear();
+  $('#liveTitel').value = '';
+  melde('Neues Transkript begonnen.');
+});
+
 async function ablageLaden() {
-  const daten = await hole('/api/ergebnisse');
+  const daten = await hole('/api/ablage');
   const kasten = $('#ablageListe');
 
-  if (!daten.dateien.length) {
+  if (!daten.transkripte.length) {
     kasten.innerHTML = '<p class="leer">Noch nichts gespeichert.</p>';
     return;
   }
+
+  kasten.innerHTML = daten.transkripte.map((t) => `
+    <div class="ablageZeile">
+      <button class="ablageOeffnen" data-oeffnen="${t.kennung}">
+        <span class="ablageName">${entschaerfe(t.titel)}</span>
+        <span class="ablageInfo">${zeit(t.dauer)} &middot; ${t.woerter} Woerter`
+          + (t.personen ? ` &middot; ${t.personen} Personen` : '')
+          + (t.hat_ton ? ' &middot; mit Ton' : '') + `</span>
+      </button>
+      <button class="wegKnopf" data-loeschen="${t.kennung}"
+              title="Loeschen">&times;</button>
+    </div>`).join('');
+
+  $$('[data-oeffnen]').forEach((knopf) => {
+    knopf.addEventListener('click', async () => {
+      const antwort = await sende('/api/ablage/oeffnen',
+        { kennung: knopf.dataset.oeffnen });
+      if (!antwort.ok) { melde(antwort.fehler, 'fehler'); return; }
+      letzteAbsaetze = [];
+      abgewaehlt.clear();
+      melde('Transkript geoeffnet.');
+    });
+  });
+  $$('[data-loeschen]').forEach((knopf) => {
+    knopf.addEventListener('click', async () => {
+      if (!confirm('Dieses Transkript wirklich loeschen?')) return;
+      await fetch('/api/ablage/' + knopf.dataset.loeschen, { method: 'DELETE' });
+      ablageLaden();
+      melde('Geloescht.');
+    });
+  });
+}
+
+async function dateienLaden() {
+  const daten = await hole('/api/ergebnisse');
+  const kasten = $('#dateiListe');
+
+  if (!daten.dateien.length) {
+    kasten.innerHTML = '<p class="leer">Noch nichts heruntergeladen.</p>';
+    return;
+  }
   kasten.innerHTML = daten.dateien.map((d) => `
-    <a class="ablageZeile" href="${d.link}" download>
+    <a class="ablageZeile schlicht" href="${d.link}" download>
       <span class="ablageName">${entschaerfe(d.name)}</span>
       <span class="ablageInfo">${d.wann} &middot; ${d.groesse} KB</span>
     </a>`).join('');
@@ -291,32 +581,6 @@ $('#knopfOrdner').addEventListener('click', async () => {
 
 /* --------------------------- Dauerabfrage --------------------------- */
 
-function transkriptZeichnen(t) {
-  const kasten = $('#transkript');
-
-  if (!t.absaetze.length) {
-    kasten.innerHTML = '<p class="leer">Noch nichts aufgenommen. '
-      + 'Starte oben eine Aufnahme oder lege eine Audiodatei ab.</p>';
-    $('#transkriptZahlen').textContent = 'noch leer';
-    return;
-  }
-
-  const unten = kasten.scrollHeight - kasten.scrollTop - kasten.clientHeight < 60;
-
-  kasten.innerHTML = t.absaetze.map((a) => `
-    <div class="absatz">
-      <span class="absatzZeit">${zeit(a.start)}</span>
-      <p>${entschaerfe(a.text)}</p>
-    </div>`).join('');
-
-  if (unten) kasten.scrollTop = kasten.scrollHeight;
-
-  let zeile = `${t.woerter} Woerter &middot; ${t.absaetze.length} Absaetze `
-            + `&middot; ${zeit(t.dauer)}`;
-  if (t.korrekturen > 0) zeile += ` &middot; ${t.korrekturen}x Orion korrigiert`;
-  $('#transkriptZahlen').innerHTML = zeile;
-}
-
 function einstellungenAnzeigen(e) {
   einstellungen = e;
   $('#orionSchalter').checked = !!e.orion_an;
@@ -325,6 +589,17 @@ function einstellungenAnzeigen(e) {
   $('#modellDatei').value = e.modell_datei;
   $('#sprache').value = e.sprache;
   $('#zeitstempel').checked = !!e.zeitstempel;
+
+  $('#empfindlichkeit').value = e.empfindlichkeit;
+  $('#empfindlichkeitText').textContent = e.empfindlichkeit;
+  $('#stimmenAn').checked = !!e.stimmen_an;
+  $('#anzahlPersonen').value = String(e.anzahl_personen || 0);
+  $('#aehnlichkeit').value = e.stimmen_aehnlichkeit;
+  $('#aehnlichkeitText').textContent = Number(e.stimmen_aehnlichkeit).toFixed(2);
+  $('#toeneAn').checked = !!e.toene_an;
+  $('#musikWeglassen').checked = !!e.musik_weglassen;
+  $('#tonSchwelle').value = e.ton_schwelle;
+  $('#tonSchwelleText').textContent = Number(e.ton_schwelle).toFixed(2);
 }
 
 let ersterDurchlauf = true;
@@ -339,7 +614,11 @@ async function abfragen() {
     return;
   }
 
-  if (ersterDurchlauf) { einstellungenAnzeigen(daten.einstellungen); ersterDurchlauf = false; }
+  if (ersterDurchlauf) {
+    einstellungenAnzeigen(daten.einstellungen);
+    $('#stimmenFehlt').hidden = daten.koennen.stimmen;
+    ersterDurchlauf = false;
+  }
 
   const l = daten.live;
   liveLaeuft = l.laeuft;
@@ -363,7 +642,16 @@ async function abfragen() {
     $('#knopfPause').textContent = 'Pause';
   }
 
+  if (!$('#liveTitel').matches(':focus') && daten.transkript.titel
+      && !$('#liveTitel').value) {
+    $('#liveTitel').value = daten.transkript.titel;
+  }
+
+  $('#knopfSprecher').disabled = !daten.transkript.ton
+                                 || !daten.transkript.absaetze.length;
+
   transkriptZeichnen(daten.transkript);
+  personenZeichnen(daten.transkript.personen);
   auftraegeZeichnen(daten.auftraege);
   $('#protokoll').textContent = daten.protokoll.join('\n');
 }
@@ -373,12 +661,10 @@ async function abfragen() {
 geraeteLaden();
 begriffeLaden();
 ablageLaden();
+dateienLaden();
 abfragen();
 setInterval(abfragen, 1500);
 
 window.addEventListener('beforeunload', (e) => {
-  if (liveLaeuft) {
-    e.preventDefault();
-    e.returnValue = 'Die Aufnahme laeuft im Hintergrund weiter.';
-  }
+  if (liveLaeuft) { e.preventDefault(); e.returnValue = ''; }
 });

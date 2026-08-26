@@ -34,6 +34,7 @@ python -m pip install --disable-pip-version-check ^
     "av==13.1.0" ^
     "soundfile>=0.12" ^
     "sounddevice>=0.4.6" ^
+    "sherpa-onnx>=1.10" ^
     "numpy>=1.26" ^
     "flask>=3.0" ^
     "reportlab>=4.0" ^
@@ -47,8 +48,11 @@ if errorlevel 1 (
     exit /b 1
 )
 
-echo   [3/3] Sprachmodelle werden vorgeladen ...
+echo   [3/4] Sprachmodelle werden vorgeladen ...
 python vorladen.py
+
+echo   [4/4] Modelle fuer Stimmen und Toene werden geholt ...
+python modelle_holen.py
 
 echo.
 echo ==========================================================

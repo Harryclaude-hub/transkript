@@ -18,3 +18,9 @@ venv/
 # --- Windows ---
 Thumbs.db
 desktop.ini
+
+# --- Gespeicherte Transkripte: privat ---
+transkripte/
+
+# --- Testtoene ---
+pruefton/
