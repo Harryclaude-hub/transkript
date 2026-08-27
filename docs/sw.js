@@ -9,21 +9,21 @@
    hochzaehlen. Sonst benutzen Browser weiter die alte Fassung.
    ------------------------------------------------------------------ */
 
-const FASSUNG = 'v4';
+const FASSUNG = 'v5';
 const FACH = 'transkript-' + FASSUNG;
 
 /* Die eigenen Dateien. Ohne die startet die App nicht. */
 const EIGENE = [
   './',
   './index.html',
-  './stil.css?v=4',
-  './begriffe.js?v=4',
-  './orion.js?v=4',
-  './pdf.js?v=4',
-  './logik.js?v=4',
-  './motor.js?v=4',
-  './ton.js?v=4',
-  './ablage.js?v=4',
+  './stil.css?v=5',
+  './begriffe.js?v=5',
+  './orion.js?v=5',
+  './pdf.js?v=5',
+  './logik.js?v=5',
+  './motor.js?v=5',
+  './ton.js?v=5',
+  './ablage.js?v=5',
   './manifest.json',
   './symbol-192.png',
   './symbol-512.png',

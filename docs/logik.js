@@ -3,9 +3,9 @@
    Diese Datei steuert, WAS passiert. Wie es aussieht, steht in stil.css.
    ------------------------------------------------------------------ */
 
-import * as Motor from './motor.js?v=4';
-import { Tonband, alsWav, dateiLesen, RATE } from './ton.js?v=4';
-import * as Ablage from './ablage.js?v=4';
+import * as Motor from './motor.js?v=5';
+import { Tonband, alsWav, dateiLesen, RATE } from './ton.js?v=5';
+import * as Ablage from './ablage.js?v=5';
 
 const $ = (a) => document.querySelector(a);
 const $$ = (a) => Array.from(document.querySelectorAll(a));
@@ -927,17 +927,41 @@ $('#knopfVorladen').addEventListener('click', async () => {
     schritte.push(['Geraeusch-Erkennung', () => Motor.vorladenGeraeusche()]);
   }
 
+  /* Der Modell-Server liefert gelegentlich eine Antwort ohne Freigabe
+     zurueck, dann bricht das Laden mit "Failed to fetch" ab. Das ist ein
+     Aussetzer und kein Dauerzustand, deshalb wird es mehrmals versucht,
+     statt dich mit halb geladenen Modellen stehen zu lassen. */
+  async function mitWiederholung(was, tun, versuche = 4) {
+    let letzter = null;
+    for (let i = 1; i <= versuche; i++) {
+      try {
+        anzeige.textContent = was + ' wird geholt ...'
+          + (i > 1 ? ` (Versuch ${i} von ${versuche})` : '');
+        await tun();
+        return;
+      } catch (f) {
+        letzter = f;
+        notiere(`${was}, Versuch ${i} fehlgeschlagen: ${f.message}`);
+        if (i < versuche) {
+          anzeige.textContent = `${was}: Aussetzer, wird gleich noch einmal versucht ...`;
+          await new Promise((r) => setTimeout(r, 1500 * i));
+        }
+      }
+    }
+    throw letzter;
+  }
+
   Motor.beiMeldung((t) => { anzeige.textContent = t; });
   try {
     for (const [was, tun] of schritte) {
-      anzeige.textContent = was + ' wird geholt ...';
-      await tun();
+      await mitWiederholung(was, tun);
     }
     anzeige.textContent = 'Fertig. Die App laeuft jetzt auch ohne Internet.';
     melde('Alles geladen. Geht jetzt offline.');
   } catch (f) {
-    anzeige.textContent = 'Nicht vollstaendig geladen: ' + f.message;
-    melde('Vorladen ging schief: ' + f.message, 'fehler');
+    anzeige.textContent = 'Nicht vollstaendig geladen: ' + f.message
+      + ' Nochmal druecken, das klappt meist beim naechsten Versuch.';
+    melde('Vorladen ging schief. Nochmal druecken.', 'fehler');
   } finally {
     Motor.beiMeldung((t) => { stand(t); });
     knopf.disabled = false;
