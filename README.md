@@ -18,6 +18,13 @@ laufenden Kosten. Kein Ton verlässt den Laptop.
 **Ohne Installation, direkt im Browser:**
 ### → [harryclaude-hub.github.io/transkript](https://harryclaude-hub.github.io/transkript/)
 
+Die Seite lässt sich **als App einrichten**: Link öffnen, auf *Einrichten*
+drücken (am Handy: Browser-Menü → *Zum Startbildschirm*). Danach liegt sie
+als Symbol auf dem Bildschirm, startet ohne Browserleiste und läuft nach
+einmaligem Vorladen **komplett ohne Internet**.
+
+Im Reiter **Ablage** gibt es dafür *Alles für offline laden*.
+
 Aufnahme starten, mitschreiben lassen, als PDF, Word oder Text herunterladen.
 Läuft auch am Handy. Die Spracherkennung kommt dabei vom Browser, Chrome und
 Edge schicken den Ton dafür an Google.

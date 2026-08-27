@@ -3,9 +3,9 @@
    Diese Datei steuert, WAS passiert. Wie es aussieht, steht in stil.css.
    ------------------------------------------------------------------ */
 
-import * as Motor from './motor.js?v=3';
-import { Tonband, alsWav, dateiLesen, RATE } from './ton.js?v=3';
-import * as Ablage from './ablage.js?v=3';
+import * as Motor from './motor.js?v=4';
+import { Tonband, alsWav, dateiLesen, RATE } from './ton.js?v=4';
+import * as Ablage from './ablage.js?v=4';
 
 const $ = (a) => document.querySelector(a);
 const $$ = (a) => Array.from(document.querySelectorAll(a));
@@ -847,6 +847,138 @@ async function ablageZeigen() {
   }));
 }
 
+/* --------------------------- App und Offline --------------------------- */
+
+let einrichtenAngebot = null;
+
+function alsAppGestartet() {
+  return window.matchMedia('(display-mode: standalone)').matches
+      || window.navigator.standalone === true;
+}
+
+function appStandZeigen() {
+  const anzeige = $('#appStand');
+  const knopf2 = $('#knopfInstallieren2');
+
+  if (alsAppGestartet()) {
+    anzeige.textContent = 'Laeuft als App. Alles bereit.';
+    knopf2.hidden = true;
+    $('#anbieten').hidden = true;
+  } else if (einrichtenAngebot) {
+    anzeige.textContent = 'Laeuft im Browser und kann als App eingerichtet werden.';
+    knopf2.hidden = false;
+  } else {
+    anzeige.innerHTML = 'Laeuft im Browser. Am Handy geht das Einrichten ueber '
+      + 'das Browser-Menue, Punkt <em>Zum Startbildschirm</em>. Am Rechner '
+      + 'ueber das kleine Symbol rechts in der Adresszeile.';
+    knopf2.hidden = true;
+  }
+}
+
+async function einrichten() {
+  if (!einrichtenAngebot) {
+    melde('Das Einrichten geht hier nur ueber das Browser-Menue.', 'fehler');
+    return;
+  }
+  einrichtenAngebot.prompt();
+  const wahl = await einrichtenAngebot.userChoice;
+  einrichtenAngebot = null;
+  $('#anbieten').hidden = true;
+  appStandZeigen();
+  melde(wahl.outcome === 'accepted'
+    ? 'Eingerichtet. Du findest sie jetzt als Symbol.'
+    : 'Abgebrochen. Geht spaeter jederzeit im Reiter Ablage.');
+}
+
+window.addEventListener('beforeinstallprompt', (e) => {
+  e.preventDefault();
+  einrichtenAngebot = e;
+  if (!alsAppGestartet() && localStorage.getItem('tr.nicht_anbieten') !== 'ja') {
+    $('#anbieten').hidden = false;
+  }
+  appStandZeigen();
+});
+
+window.addEventListener('appinstalled', () => {
+  einrichtenAngebot = null;
+  $('#anbieten').hidden = true;
+  appStandZeigen();
+  melde('Als App eingerichtet.');
+});
+
+$('#knopfInstallieren').addEventListener('click', einrichten);
+$('#knopfInstallieren2').addEventListener('click', einrichten);
+$('#knopfSpaeter').addEventListener('click', () => {
+  localStorage.setItem('tr.nicht_anbieten', 'ja');
+  $('#anbieten').hidden = true;
+});
+
+/* Alle Modelle einmal holen, damit die App danach ohne Netz laeuft. */
+$('#knopfVorladen').addEventListener('click', async () => {
+  const knopf = $('#knopfVorladen');
+  const anzeige = $('#vorladenStand');
+  knopf.disabled = true;
+
+  const schritte = [
+    ['Spracherkennung', () => Motor.textErkennerLaden($('#modellGroesse').value)],
+    ['Stimmen-Trennung und Fingerabdruck', () => Motor.vorladenStimmen()],
+  ];
+  if ($('#toeneAn').checked) {
+    schritte.push(['Geraeusch-Erkennung', () => Motor.vorladenGeraeusche()]);
+  }
+
+  Motor.beiMeldung((t) => { anzeige.textContent = t; });
+  try {
+    for (const [was, tun] of schritte) {
+      anzeige.textContent = was + ' wird geholt ...';
+      await tun();
+    }
+    anzeige.textContent = 'Fertig. Die App laeuft jetzt auch ohne Internet.';
+    melde('Alles geladen. Geht jetzt offline.');
+  } catch (f) {
+    anzeige.textContent = 'Nicht vollstaendig geladen: ' + f.message;
+    melde('Vorladen ging schief: ' + f.message, 'fehler');
+  } finally {
+    Motor.beiMeldung((t) => { stand(t); });
+    knopf.disabled = false;
+    ablageZeigen();
+  }
+});
+
+$('#knopfAufraeumen').addEventListener('click', async () => {
+  if (!confirm('Alle gespeicherten Modelle loeschen? Beim naechsten Mal '
+             + 'werden sie neu geholt. Deine Transkripte bleiben.')) return;
+  try {
+    const namen = await caches.keys();
+    await Promise.all(namen.filter((n) => !n.startsWith('transkript-'))
+      .map((n) => caches.delete(n)));
+    $('#vorladenStand').textContent = 'Modelle geloescht.';
+    melde('Modelle geloescht. Die App selbst bleibt.');
+    ablageZeigen();
+  } catch (f) {
+    melde('Loeschen ging nicht: ' + f.message, 'fehler');
+  }
+});
+
+/* Offline-Dienst anmelden. Ohne ihn startet die App nur mit Internet.
+   Nicht am load-Ereignis haengen: dieses Modul laeuft verzoegert, das
+   Ereignis kann da schon durch sein und die Anmeldung bliebe aus. */
+function dienstAnmelden() {
+  if (!('serviceWorker' in navigator)) {
+    notiere('Dieser Browser kennt keinen Offline-Dienst.');
+    return;
+  }
+  navigator.serviceWorker.register('sw.js', { scope: './' })
+    .then((reg) => {
+      notiere('Offline-Dienst angemeldet.');
+      reg.addEventListener('updatefound', () => notiere('Neue Fassung wird geholt ...'));
+    })
+    .catch((f) => notiere('Offline-Dienst ging nicht: ' + f.message));
+}
+
+if (document.readyState === 'complete') dienstAnmelden();
+else window.addEventListener('load', dienstAnmelden, { once: true });
+
 /* --------------------------- Start --------------------------- */
 
 (function start() {
@@ -874,7 +1006,7 @@ async function ablageZeigen() {
   $('#tonSchwelle').value = einst('tonSchwelle', '0.3');
   $('#tonSchwelleText').textContent = Number($('#tonSchwelle').value).toFixed(2);
 
-  zeichnen(); knoepfe(); ablageZeigen();
+  zeichnen(); knoepfe(); ablageZeigen(); appStandZeigen();
 
   const w = $('#warnung');
   if (location.protocol !== 'https:' && location.hostname !== 'localhost'

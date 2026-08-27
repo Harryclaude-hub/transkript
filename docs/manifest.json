@@ -1,0 +1,44 @@
+{
+  "name": "Transkript",
+  "short_name": "Transkript",
+  "description": "Mitschrift mit Stimmenerkennung. Rechnet auf dem eigenen Geraet, ohne Konto und ohne Cloud.",
+  "lang": "de",
+  "dir": "ltr",
+  "start_url": "./",
+  "scope": "./",
+  "id": "/transkript/",
+  "display": "standalone",
+  "display_override": ["window-controls-overlay", "standalone", "minimal-ui"],
+  "orientation": "any",
+  "background_color": "#0e1116",
+  "theme_color": "#0e1116",
+  "categories": ["productivity", "utilities"],
+  "icons": [
+    {
+      "src": "symbol-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "symbol-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "symbol-maske.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
+    }
+  ],
+  "shortcuts": [
+    {
+      "name": "Neue Aufnahme",
+      "short_name": "Aufnahme",
+      "url": "./?start=aufnahme",
+      "icons": [{ "src": "symbol-192.png", "sizes": "192x192" }]
+    }
+  ]
+}

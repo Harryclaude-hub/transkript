@@ -186,6 +186,18 @@ async function abdruckLaden() {
   });
 }
 
+/* Zum Vorladen, damit die App danach ohne Internet laeuft. */
+export async function vorladenStimmen() {
+  await abschnittLaden();
+  await abdruckLaden();
+  melder('Stimmen-Erkennung ist bereit.');
+}
+
+export async function vorladenGeraeusche() {
+  await geraeuschLaden();
+  melder('Geraeusch-Erkennung ist bereit.');
+}
+
 /* pyannote arbeitet auf Fenstern von rund 10 Sekunden. Laengere Aufnahmen
    werden stueckweise durchgegeben und die Ergebnisse aneinandergehaengt. */
 const FENSTER = 10.0;

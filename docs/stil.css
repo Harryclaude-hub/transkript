@@ -414,3 +414,22 @@ body.nimmtAuf .punkt {
          color: var(--schrift-leise); }
 .liste li { margin-bottom: 7px; }
 .liste strong { color: var(--schrift); font-weight: 600; }
+
+/* ------------------------------ App einrichten ------------------------------ */
+
+.anbieten {
+  display: flex; align-items: center; justify-content: space-between;
+  gap: 14px; flex-wrap: wrap;
+  background: linear-gradient(135deg, rgba(59,130,246,.16), rgba(59,130,246,.06));
+  border: 1px solid rgba(59,130,246,.4);
+  border-radius: var(--rundung); padding: 14px 18px; margin: 16px 0 0;
+}
+.anbietenText { display: flex; flex-direction: column; gap: 2px; }
+.anbietenText strong { font-size: 15px; }
+.anbietenText span { font-size: 13px; color: var(--schrift-leise); }
+.anbieten .knopfReihe { margin-top: 0; }
+
+@media (max-width: 620px) {
+  .anbieten { padding: 13px 15px; }
+  .anbieten .knopfReihe { width: 100%; }
+}
